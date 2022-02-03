@@ -2,10 +2,10 @@ package event;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
 
 
 public class EventFile {
@@ -31,10 +31,9 @@ public class EventFile {
 			writer.close();
 		} catch (IOException e) {e.printStackTrace();}
 		
-		
 	}
 	
-	public static FloorEvent readEvent(File file) {
+	public static FloorEvent readEvent(File file) throws ParseException {
 		
 		FloorEvent event = null;
 		BufferedReader br = null;
@@ -62,8 +61,10 @@ public class EventFile {
 	
 	public boolean wasModified() {
 		
-		if(file.lastModified() != time) {
-			time = file.lastModified();
+		long timeStamp = file.lastModified();
+		
+		if(timeStamp != this.time) {
+			this.time = timeStamp;
 			return true;
 		}
 		return false;
@@ -75,5 +76,6 @@ public class EventFile {
 	public File getFile() {
 		return file;
 	}
+
 
 }

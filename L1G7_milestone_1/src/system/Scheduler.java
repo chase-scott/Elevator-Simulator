@@ -33,7 +33,6 @@ public class Scheduler implements Runnable {
 
 
 	private void scheduleEvent(FloorEvent e) {
-		System.out.println(Thread.currentThread().getName() + " is scheduling a new floor event");
 		
 		//when scheduling is done, notify via pipe that event is ready
 		pipe.isElevatorJob(e);

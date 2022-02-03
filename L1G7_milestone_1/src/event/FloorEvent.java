@@ -1,5 +1,7 @@
 package event;
 
+import java.text.ParseException;
+
 import state.Direction;
 
 public class FloorEvent {
@@ -38,14 +40,17 @@ public class FloorEvent {
 	 * 
 	 * @param eventStr
 	 */
-	public FloorEvent(String eventStr) {
+	public FloorEvent(String eventStr) throws ParseException {
 		
 		String[] splitString = eventStr.split(" ");
-
-		this.time = splitString[0];
-		this.floorNum = Integer.parseInt(splitString[1]);
-		this.direction = Direction.parseDirection(splitString[2]);
-		this.floorDestinationNum = Integer.parseInt(splitString[3]);
+		if(splitString.length == 4) {
+			this.time = splitString[0];
+			this.floorNum = Integer.parseInt(splitString[1]);
+			this.direction = Direction.parseDirection(splitString[2]);
+			this.floorDestinationNum = Integer.parseInt(splitString[3]);
+		} else {
+			throw new ParseException("Invalid floor event", 1);
+		}
 		
 	}
 	

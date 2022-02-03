@@ -57,6 +57,7 @@ public class Pipe {
 		if(events.size() == 1) {
 			this.floorEvent = false;
 		}
+		System.out.println(Thread.currentThread().getName() + " is scheduling a new floor event");
 		notifyAll();
 		
 	}
@@ -64,11 +65,12 @@ public class Pipe {
 	/**
 	 * FloorSystem calls this inform the scheduler that there is a new floor event
 	 */
-	public synchronized void sendFloorEvent(FloorEvent e) {
+	public synchronized void sendFloorEvent(FloorEvent e) throws NullPointerException {
 		
 		System.out.println(Thread.currentThread().getName() + " is sending a new floor event to the scheduler: " + e.toString());
 		this.events.add(e);
 		this.floorEvent = true;
+		
 		notifyAll();
 		
 	}
@@ -90,6 +92,6 @@ public class Pipe {
 		return this.events.remove(0);
 
 	}
-	
+
 
 }

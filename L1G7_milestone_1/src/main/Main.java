@@ -20,6 +20,13 @@ public class Main {
 		schedulerSystem.start();
 		elevatorSystem.start();
 	
+		int NUM_EVENTS = 3; //How many events to send
+		for(int i = 0; i < NUM_EVENTS; i++) {
+			new FloorEvent();
+			try {
+				Thread.sleep((long) (Math.random()*1000));
+			} catch (InterruptedException e) {}
+		}
 		
 		
 	}
