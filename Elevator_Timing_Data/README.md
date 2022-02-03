@@ -7,6 +7,7 @@
  <h2>TODO</h2>
   <p>
     Convert paper calculations and drawings into electronic versions (acceleration average calculation, etc). <br>
+    Format, clean up, and restructure script. <br>
   </p>
   
 <h2>Iteration #0 Work Products Values</h2>
