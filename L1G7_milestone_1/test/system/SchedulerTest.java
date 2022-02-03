@@ -4,11 +4,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import floor.FloorEvent;
+import state.Direction;
+
 class SchedulerTest {
 
 	@Test
-	void test() {
-		fail("Not yet implemented");
+	void schedulerTest() {
+
 	}
 
 }
