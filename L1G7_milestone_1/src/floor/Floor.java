@@ -28,6 +28,7 @@ public class Floor {
 			buttons.add(new FloorButton(Direction.DOWN));
 		}
 		
+		//Sends a floor event to the eventFile... Add more here to simulate more floor events.
 		new FloorEvent();
 	
 	}
