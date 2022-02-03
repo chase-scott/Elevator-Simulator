@@ -1,9 +1,7 @@
 package system;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-
 import event.EventFile;
 import event.FloorEvent;
 import floor.Floor;
@@ -17,34 +15,27 @@ public class FloorSystem implements Runnable {
 	public FloorSystem(Pipe pipe, EventFile file) {
 		
 		this.file = file;
-		this.pipe = pipe;
 		
+		this.pipe = pipe;
 		this.floors = new ArrayList<>();
 		for(int i = 1; i <= 11; i++) {
 			floors.add(new Floor(i, i == 11, i == 1));
 		}
 		
 	}
-	
-	/**
-	 * Monitors event file for new floor events
-	 */
-	private synchronized void monitor() {
 
+	private void monitorFile() {
 		
-		//if there is a new floor event in the file, send floor event to schedule
-		FloorEvent e = null;
-		if(file.wasModified())
-			try {
-				e = EventFile.readEvent(file.getFile());
-			} catch (ParseException e1) {
-				return;
-			}
-		try {
+		if(file.isModified()) {
+			FloorEvent e = EventFile.readEvent(file.getFile());
+			
 			pipe.sendFloorEvent(e);
-		} catch (NullPointerException e1) {
-			return;
+			
+
 		}
+		
+		
+		
 		
 	}
 	
@@ -55,12 +46,20 @@ public class FloorSystem implements Runnable {
 	public void run() {
 
 		while(true) {
-		
-			//monitor for floor events
-			monitor();
-			
+			monitorFile();
 			
 		}
+		
+		
+		//for(int i = 0; i < 3; i++) {
+		
+			//monitor for floor events
+			//monitor();
+			//pipe.sendFloorEvent(new FloorEvent());
+			
+			
+			
+		//}
 	}
 
 }

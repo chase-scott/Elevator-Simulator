@@ -45,9 +45,14 @@ public class FloorEvent {
 		String[] splitString = eventStr.split(" ");
 		if(splitString.length == 4) {
 			this.time = splitString[0];
-			this.floorNum = Integer.parseInt(splitString[1]);
 			this.direction = Direction.parseDirection(splitString[2]);
-			this.floorDestinationNum = Integer.parseInt(splitString[3]);
+			
+			try {
+				this.floorNum = Integer.parseInt(splitString[1]);
+				this.floorDestinationNum = Integer.parseInt(splitString[3]);
+			} catch (NumberFormatException e) {
+				throw new ParseException("Invalid floor event numbers", 1);
+			}
 		} else {
 			throw new ParseException("Invalid floor event", 1);
 		}
@@ -67,5 +72,24 @@ public class FloorEvent {
 	public String toString() {
 		return this.time + " " + String.valueOf(floorNum) + " " + direction.toString() + " " + String.valueOf(floorDestinationNum);
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		
+		if(o instanceof FloorEvent) {
+			FloorEvent test = (FloorEvent) o;
+			
+			if(test.direction == this.direction && test.floorDestinationNum == this.floorDestinationNum && test.floorNum == this.floorNum && test.time == this.time) {
+				return true;
+			}
+			
+		}
+		
+		return false;
+		
+		
+	}
+	
+	
 
 }

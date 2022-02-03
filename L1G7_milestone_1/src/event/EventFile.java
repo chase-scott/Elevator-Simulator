@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 
 
@@ -13,11 +15,11 @@ public class EventFile {
 	public static String EVENT_FILEPATH = "eventfolder/eventFile.txt";
 	
 	private File file;
-	private long time;
+	private long timeStamp;
 	
-	public EventFile() {
-		this.file = new File(EVENT_FILEPATH);
-		this.time = file.lastModified();
+	public EventFile(File file) {
+		this.file = file;
+		this.timeStamp = file.lastModified();
 	}
 	
 	
@@ -33,46 +35,49 @@ public class EventFile {
 		
 	}
 	
-	public static FloorEvent readEvent(File file) throws ParseException {
+	public static FloorEvent readEvent(File file) {
 		
-		FloorEvent event = null;
-		BufferedReader br = null;
-		try {
-			br = new BufferedReader(new FileReader(file));
-			String eventStr;
-			while ((eventStr = br.readLine()) != null) {
-				event = new FloorEvent(eventStr);
-				
+		 StringBuilder contentBuilder = new StringBuilder();
+	        try (BufferedReader br = new BufferedReader(new FileReader(EVENT_FILEPATH))) 
+	        {
+	 
+	            String sCurrentLine;
+	            while ((sCurrentLine = br.readLine()) != null) 
+	            {
+	                contentBuilder.append(sCurrentLine);
+	            }
+	        } 
+	        catch (IOException e) 
+	        {
+	            e.printStackTrace();
+	        }
+	        
+	        
+	        FloorEvent event = null;
+	        try {
+				event = new FloorEvent(contentBuilder.toString());
+			} catch (ParseException e) {
+				e.printStackTrace();
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return event;
+	        
+	        return event;
+		
 		
 	}
 	
-	public boolean wasModified() {
-		
-		long timeStamp = file.lastModified();
-		
-		if(timeStamp != this.time) {
-			this.time = timeStamp;
-			return true;
-		}
-		return false;
-		
+	
+	
+	
+	public boolean isModified() {
+	  long timeStamp = file.lastModified();
+	  
+	  if( this.timeStamp != timeStamp ) {
+	    this.timeStamp = timeStamp;
+	    return true;
+	  }
+	  return false;
 	}
-
-
-
+	
 	public File getFile() {
 		return file;
 	}

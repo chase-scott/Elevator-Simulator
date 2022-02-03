@@ -54,7 +54,7 @@ public class Pipe {
 		}
 		
 		//if removing last FloorEvent in queue
-		if(events.size() == 1) {
+		if(events.size() <= 1) {
 			this.floorEvent = false;
 		}
 		System.out.println(Thread.currentThread().getName() + " is scheduling a new floor event");
@@ -65,12 +65,13 @@ public class Pipe {
 	/**
 	 * FloorSystem calls this inform the scheduler that there is a new floor event
 	 */
-	public synchronized void sendFloorEvent(FloorEvent e) throws NullPointerException {
+	public synchronized void sendFloorEvent(FloorEvent e) {
 		
-		System.out.println(Thread.currentThread().getName() + " is sending a new floor event to the scheduler: " + e.toString());
+		if(events.contains(e)) return;
+		
+		System.out.println(">>> " + Thread.currentThread().getName() + " is sending a new floor event to the scheduler: " + e.toString());
 		this.events.add(e);
 		this.floorEvent = true;
-		
 		notifyAll();
 		
 	}
