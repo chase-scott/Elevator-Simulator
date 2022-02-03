@@ -14,5 +14,16 @@ public enum Direction {
 		return this.state;
 	}
 
+	public static Direction parseDirection(String direction) {
+		switch(direction.toLowerCase()) {
+			case "up":
+				return UP;
+			case "down":
+				return DOWN;
+			default:
+				return null;
+		}
+	}
+
 }
 

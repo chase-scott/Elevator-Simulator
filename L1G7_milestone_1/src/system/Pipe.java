@@ -3,7 +3,7 @@ package system;
 import java.util.LinkedList;
 import java.util.List;
 
-import floor.FloorEvent;
+import event.FloorEvent;
 
 public class Pipe {
 	

@@ -1,7 +1,7 @@
 package system;
 
 import elevator.Elevator;
-import floor.FloorEvent;
+import event.FloorEvent;
 
 public class ElevatorSystem implements Runnable {
 	

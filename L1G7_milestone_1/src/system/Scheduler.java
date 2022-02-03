@@ -1,6 +1,6 @@
 package system;
 
-import floor.FloorEvent;
+import event.FloorEvent;
 
 public class Scheduler implements Runnable {
 	

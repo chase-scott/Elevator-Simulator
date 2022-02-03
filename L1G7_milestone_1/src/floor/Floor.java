@@ -2,6 +2,7 @@ package floor;
 
 import java.util.ArrayList;
 
+import event.FloorEvent;
 import state.Direction;
 
 /**
@@ -26,6 +27,8 @@ public class Floor {
 			buttons.add(new FloorButton(Direction.UP));
 			buttons.add(new FloorButton(Direction.DOWN));
 		}
+		
+		new FloorEvent();
 	
 	}
 	
