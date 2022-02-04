@@ -1,5 +1,10 @@
 package state;
 
+/**
+ * MotorState enumeration
+ * 
+ * @author Chase Scott - 101092194
+ */
 public enum MotorState {
 	
 	IDLE("idle"), UP("up"), DOWN("down");

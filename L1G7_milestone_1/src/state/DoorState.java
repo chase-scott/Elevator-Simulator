@@ -1,5 +1,10 @@
 package state;
 
+/**
+ * DoorState enumeration
+ * 
+ * @author Chase Scott - 101092194
+ */
 public enum DoorState {
 	
 	OPEN("open"), CLOSED("closed");
@@ -26,4 +31,3 @@ public enum DoorState {
 	}
 	
 }
-

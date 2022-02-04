@@ -3,8 +3,9 @@ package floor;
 import state.Direction;
 
 /**
- * @author Chase
- *
+ * FloorButton class
+ * 
+ * @author Chase Scott - 101092194
  */
 public class FloorButton {
 	
@@ -16,11 +17,6 @@ public class FloorButton {
 	
 	public Direction getDirection() {
 		return direction;
-	}
-	
-	@Override
-	public String toString() {
-		return this.direction.getState();
 	}
 
 }

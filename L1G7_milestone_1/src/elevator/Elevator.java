@@ -7,8 +7,9 @@ import state.DoorState;
 import state.MotorState;
 
 /**
- * @author Chase
- *
+ * Elevator class
+ * 
+ * @author Chase Scott - 101092194
  */
 public class Elevator {
 	
@@ -26,10 +27,17 @@ public class Elevator {
 		}
 	}
 	
+	/**
+	 * When a button is pressed, lit up the lamp of that button.
+	 * 
+	 * @param targetFloor	int, the target floor
+	 */
 	public void pressButton(int targetFloor) {
 		for(ElevatorButton b : buttons) {
 			if(b.getTargetFloor() == targetFloor) {
-				//TODO turn on lamp
+				if(!b.getLamp().isLit()) {
+					b.getLamp().switchState();
+				}
 			}
 		}
 		
@@ -42,4 +50,3 @@ public class Elevator {
 	
 
 }
-

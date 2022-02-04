@@ -3,8 +3,9 @@ package elevator;
 import state.MotorState;
 
 /**
- * @author Chase
- *
+ * Motor class
+ * 
+ * @author Chase Scott - 101092194
  */
 public class Motor {
 	
@@ -15,7 +16,7 @@ public class Motor {
 	}
 
 	public MotorState getState() {
-		return this.state;
+		return state;
 	}
 
 	public void setState(MotorState state) {
@@ -28,4 +29,3 @@ public class Motor {
 	}
 	
 }
-

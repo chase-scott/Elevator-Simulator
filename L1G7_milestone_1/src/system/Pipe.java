@@ -1,98 +1,131 @@
 package system;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import event.FloorEvent;
 
+/**
+ * Pipe class
+ * 
+ * @author Chase Scott - 101092194
+ */
 public class Pipe {
 	
-	//if the elevator has a job to service
-	private boolean elevatorJob;
+	//State variables for checking if a message is being sent through the systems
+	private boolean elevatorToScheduler, schedulerToElevator, floorToScheduler, schedulerToFloor;
 	
-	//if the floor has produced a floor event
-	private boolean floorEvent;
+	//most recently queued floor event
+	private FloorEvent floorEvent;
 	
-	//queue of floor events sent to the pipe
+	//List of queued floor events
 	private List<FloorEvent> events;
-	
+
 	public Pipe() {
-		this.elevatorJob = false;
-		this.floorEvent = false;
-		this.events = new LinkedList<>();
-	}
-	
-	
-	/**
-	 * Check if there is an elevator job
-	 */
-	public synchronized void pollElevatorJob() {
-		
-		while(!elevatorJob) {
-			try {
-				wait();
-			} catch (InterruptedException e) {e.printStackTrace();}
-		}
-		
-		System.out.println(Thread.currentThread().getName() + " is servicing a new elevator job");
-		this.elevatorJob = false;
-		
-		notifyAll();
-		
+		floorToScheduler = false;
+		schedulerToFloor = false;
+		elevatorToScheduler = false;
+		schedulerToElevator = false;
+		events = new ArrayList<>();
 	}
 
+	/**
+	 * Send a FloorEvent to the scheduler.
+	 * Called by FloorSystem.
+	 * 
+	 * @param e	FloorEvent, the event
+	 */
+	public synchronized void floorToScheduler(FloorEvent e) {
+		floorEvent = e;
+		floorToScheduler = true;
+		notifyAll();
+	}
 
 	/**
-	 * Inform scheduler that there is a new elevator job
+	 * Notify floor of signal from elevator.
+	 * Called by Scheduler.
 	 */
-	public synchronized void scheduleElevatorJob() {
+	public synchronized void schedulerToFloor() {
+		schedulerToFloor = true;
+		notifyAll();
+	}
+
+	/**
+	 * Send FloorEvent to an elevator.
+	 * Called by Scheduler.
+	 * 
+	 * @param e
+	 */
+	public synchronized void sendToElevator(FloorEvent e) {
+		events.add(e);
 		
-		while(!floorEvent) {
+		floorToScheduler = false;
+		while (schedulerToElevator) {
 			try {
 				wait();
-			} catch (InterruptedException e) {e.printStackTrace();}
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 		}
-		
-		//if removing last FloorEvent in queue
-		if(events.size() <= 1) {
-			this.floorEvent = false;
-		}
-		System.out.println(Thread.currentThread().getName() + " is scheduling a new floor event");
+		schedulerToElevator = true;
 		notifyAll();
-		
+	}
+
+	/**
+	 * Send a signal from the elevator to the Scheduler.
+	 * Called by ElevatorSystem.
+	 */
+	public synchronized void elevatorToScheduler() {
+		elevatorToScheduler = true;
+		notifyAll();
 	}
 	
 	/**
-	 * FloorSystem calls this inform the scheduler that there is a new floor event
+	 * Removes a floor event from the queue
+	 * 
+	 * @return	FloorEvent, the event
 	 */
-	public synchronized void sendFloorEvent(FloorEvent e) {
-		
-		if(events.contains(e)) return;
-		
-		System.out.println(">>> " + Thread.currentThread().getName() + " is sending a new floor event to the scheduler: " + e.toString());
-		this.events.add(e);
-		this.floorEvent = true;
-		notifyAll();
-		
-	}
-	
-	/**
-	 * Called by the scheduler to inform the elevator that the current floor event is ready to be processed
-	 */
-	public synchronized void isElevatorJob(FloorEvent e) {
-		this.events.add(e);
-		this.elevatorJob = true;
-		notifyAll();
-	}
-	
-	
-	public synchronized FloorEvent getNextEvent() {
+	public FloorEvent getNextEvent() {	
 		
 		if(events.size() == 0) return null;
 		
-		return this.events.remove(0);
-
+		return events.remove(0);
 	}
 
+	public boolean isFloorToScheduler() {
+		return floorToScheduler;
+	}
+
+	public boolean isSchedulerToFloor() {
+		return schedulerToFloor;
+	}
+
+	public boolean isElevatorToScheduler() {
+		return elevatorToScheduler;
+	}
+
+	public boolean isSchedulerToElevator() {
+		return schedulerToElevator;
+	}
+
+	public FloorEvent getFloorEvent() {
+		return floorEvent;
+	}
+
+	public void setSchedulerToElevator(boolean isEvent) {
+		schedulerToElevator = isEvent;
+	}
+
+	public void setElevatorToScheduler(boolean isEvent) {
+		elevatorToScheduler = isEvent;
+	}
+
+	public void setSchedulerToFloor(boolean isEvent) {
+		schedulerToFloor = isEvent;
+	}
+
+	public void setFloorToScheduler(boolean isEvent) {
+		floorToScheduler = isEvent;
+	}
 
 }

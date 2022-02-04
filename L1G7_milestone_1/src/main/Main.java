@@ -1,41 +1,41 @@
 package main;
 
-import java.io.File;
-
-import event.EventFile;
-import event.FloorEvent;
+import event.*;
 import system.*;
 
+/**
+ * Main class for running the program.
+ * 
+ * @author Chase Scott - 101092194
+ */
 public class Main {
 	
 	public static void main(String[] args) {
 		
-		Pipe communicationPipe = new Pipe();
-		EventFile file = new EventFile(new File(EventFile.EVENT_FILEPATH));
-	
-		Thread floorSystem = new Thread(new FloorSystem(communicationPipe, file), "floor subsystem");
-		Thread schedulerSystem = new Thread(new Scheduler(communicationPipe), "scheduler subsystem");
-		Thread elevatorSystem = new Thread(new ElevatorSystem(communicationPipe), "elevator subsystem");
 
-	
-		floorSystem.start();
-		schedulerSystem.start();
-		elevatorSystem.start();
+		Pipe buffer = new Pipe();
+		EventFile file = new EventFile();
 		
-		for(int i = 0; i < 3; i++) {
-			new FloorEvent();
-			
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {e.printStackTrace();}
-	
+		Thread floorSubsystem = new Thread(new FloorSystem(1, 11, buffer, file), "Floor subsystem");
+		Thread elevatorSubsystem = new Thread(new ElevatorSystem(1, 11, buffer), "Elevator subsystem");
+		Thread schedulingSubsystem = new Thread(new Scheduler(buffer), "Scheduler subsystem");
+		
+		floorSubsystem.start();
+		elevatorSubsystem.start();
+		schedulingSubsystem.start();
+		
+		
+		new FloorEvent();
+		
+		try {
+			Thread.sleep(1500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 		
-	
+		//new FloorEvent();
+		
+		
 	}
 	
-	
-	
-	
-
 }

@@ -2,64 +2,76 @@ package system;
 
 import java.util.ArrayList;
 import java.util.List;
-import event.EventFile;
-import event.FloorEvent;
+
+import event.*;
 import floor.Floor;
 
+/**
+ * FloorSystem class
+ * 
+ * @author Chase Scott - 101092194
+ */
 public class FloorSystem implements Runnable {
-	
+
+	//The floors of the building
 	private List<Floor> floors;
+	//The pipe through which this system communicates
 	private Pipe pipe;
-	private EventFile file;
-	
-	public FloorSystem(Pipe pipe, EventFile file) {
+	//The EventFile that is read for FloorEvents
+	private EventFile eventFile;
+
+	public FloorSystem(int MIN_FLOOR, int MAX_FLOOR, Pipe pipe, EventFile eventFile) {
 		
-		this.file = file;
+		floors = new ArrayList<Floor>();
+		for (int i = MIN_FLOOR; i <= MAX_FLOOR; i++) {
+			floors.add(new Floor(i, i == MIN_FLOOR, i == MAX_FLOOR));
+		}
 		
 		this.pipe = pipe;
-		this.floors = new ArrayList<>();
-		for(int i = 1; i <= 11; i++) {
-			floors.add(new Floor(i, i == 11, i == 1));
-		}
-		
+		this.eventFile = eventFile;
 	}
 
-	private void monitorFile() {
-		
-		if(file.isModified()) {
-			FloorEvent e = EventFile.readEvent(file.getFile());
-			
-			pipe.sendFloorEvent(e);
-			
+	/**
+	 * Handles the event sent from the scheduler
+	 */
+	private void handleEvent() {
 
-		}
-		
-		
-		
-		
+		System.out.println(Thread.currentThread().getName() + " has received the signal from the elevator.\n");
+		pipe.setSchedulerToFloor(false);
 	}
-	
-	
-	
+
+	/**
+	 * Monitors the EventFile for any updates.
+	 * If an updated is detected, send it to the scheduler.
+	 */
+	private void monitor() {
+
+		//if file has been updated, retrieve floor event and send to scheduler
+		if (eventFile.isFileUpdated()) {
+			
+			FloorEvent e = EventFile.readTextFile(eventFile.getFile());
+			System.out.println(Thread.currentThread().getName() + " has received a new FloorEvent >>> {" + e.toString() + "}\nSending signal to Scheduler...\n");
+
+			pipe.floorToScheduler(e);
+		}
+	}
 
 	@Override
 	public void run() {
-
-		while(true) {
-			monitorFile();
+		while (true) {
+			
+			//if scheduler is sending a signal to this system, handle it.
+			//else, monitor EventFile
+			if (pipe.isSchedulerToFloor()) {
+				handleEvent();
+			} else {
+				monitor();
+			}
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {e.printStackTrace();}
 			
 		}
-		
-		
-		//for(int i = 0; i < 3; i++) {
-		
-			//monitor for floor events
-			//monitor();
-			//pipe.sendFloorEvent(new FloorEvent());
-			
-			
-			
-		//}
 	}
-
 }

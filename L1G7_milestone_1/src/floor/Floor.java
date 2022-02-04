@@ -2,14 +2,13 @@ package floor;
 
 import java.util.ArrayList;
 
-import event.FloorEvent;
 import state.Direction;
 
 /**
- * @author Chase
- *
+ * Floor class
+ * 
+ * @author Chase Scott - 101092194
  */
-
 public class Floor {
 
 	private ArrayList<FloorButton> buttons;
@@ -27,20 +26,10 @@ public class Floor {
 			buttons.add(new FloorButton(Direction.UP));
 			buttons.add(new FloorButton(Direction.DOWN));
 		}
-		
+	
 	}
 	
 	public int getFloorNumber() {return this.floorNumber;}
-	
-	@Override
-	public String toString() {
-		String str = String.valueOf(floorNumber);
-		for(FloorButton b : buttons) {
-			str += b.toString();
-		}
-		return str;
-		
-	}
 	
 	
 	

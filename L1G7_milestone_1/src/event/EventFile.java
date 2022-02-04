@@ -5,25 +5,48 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.ParseException;
 
-
+/**
+ * EventFile class
+ * 
+ * @author Chase Scott - 101092194
+ */
 public class EventFile {
 	
+	//file path for event file
 	public static String EVENT_FILEPATH = "eventfolder/eventFile.txt";
 	
-	private File file;
 	private long timeStamp;
-	
-	public EventFile(File file) {
-		this.file = file;
+	private File file;
+
+	/**
+	 * Constructor for EventFile class
+	 */
+	public EventFile() {
+
+		this.file = new File(EVENT_FILEPATH);
 		this.timeStamp = file.lastModified();
 	}
-	
-	
-	
+
+	public boolean isFileUpdated() {
+		if (timeStamp != file.lastModified()) {
+			timeStamp = file.lastModified();
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public File getFile() {
+		return file;
+	}
+
+	/**
+	 * Write an event to the EventFile
+	 * 
+	 * @param event	FloorEvent, the event to write
+	 */
 	public static void writeEvent(FloorEvent event) {
 		
 		FileWriter writer = null;
@@ -35,8 +58,13 @@ public class EventFile {
 		
 	}
 	
-	public static FloorEvent readEvent(File file) {
-		
+	/**
+	 * Parses the EventFile for an event
+	 * 
+	 * @param file	File, the file to parse
+	 * @return	FloorEvent, the parsed event
+	 */
+	public static FloorEvent readTextFile(File file) {
 		 StringBuilder contentBuilder = new StringBuilder();
 	        try (BufferedReader br = new BufferedReader(new FileReader(EVENT_FILEPATH))) 
 	        {
@@ -61,25 +89,6 @@ public class EventFile {
 			}
 	        
 	        return event;
-		
-		
-	}
-	
-	
-	
-	
-	public boolean isModified() {
-	  long timeStamp = file.lastModified();
-	  
-	  if( this.timeStamp != timeStamp ) {
-	    this.timeStamp = timeStamp;
-	    return true;
-	  }
-	  return false;
-	}
-	
-	public File getFile() {
-		return file;
 	}
 
 

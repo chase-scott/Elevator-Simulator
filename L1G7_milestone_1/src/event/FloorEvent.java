@@ -4,14 +4,21 @@ import java.text.ParseException;
 
 import state.Direction;
 
+/**
+ * FloorEvent class
+ * 
+ * @author Chase Scott - 101092194
+ */
 public class FloorEvent {
 	
-	//TODO make a time class which formats this nicely
 	private String time;
 	private int floorNum;
 	private Direction direction;
-	private int floorDestinationNum;
+	private int destinationFloorNum;
 	
+	/**
+	 * Creates a random FloorEvent and writes it to the EventFile
+	 */
 	public FloorEvent() {
 		int MAXFLOOR = 11;
 		int MINFLOOR = 1;
@@ -20,75 +27,73 @@ public class FloorEvent {
 		this.floorNum = ((int) (Math.random()*(MAXFLOOR - MINFLOOR))) + MINFLOOR;
 		
 		do {
-			this.floorDestinationNum = ((int) (Math.random()*(MAXFLOOR - MINFLOOR))) + MINFLOOR;
-		} while(this.floorDestinationNum == this.floorNum);
+			this.destinationFloorNum = ((int) (Math.random()*(MAXFLOOR - MINFLOOR))) + MINFLOOR;
+		} while(this.destinationFloorNum == this.floorNum);
 		
 		
-		if(this.floorNum > this.floorDestinationNum) {
+		if(this.floorNum > this.destinationFloorNum) {
 			this.direction = Direction.DOWN;
 		} else {
 			this.direction = Direction.UP;
 		}
 		
-		//write this event to file
 		EventFile.writeEvent(this);
-		
 	}
 	
 	/**
-	 * Parses the string for a floor event
+	 * Constructor for a specific FloorEvent
 	 * 
-	 * @param eventStr
+	 * @param time				String, time
+	 * @param floorNumber		int, floor number
+	 * @param direction			Direction, direction of button press
+	 * @param destinationFloor	int, destination floor
 	 */
-	public FloorEvent(String eventStr) throws ParseException {
-		
-		String[] splitString = eventStr.split(" ");
-		if(splitString.length == 4) {
-			this.time = splitString[0];
-			this.direction = Direction.parseDirection(splitString[2]);
-			
+	public FloorEvent(String time, int floorNumber, Direction direction, int destinationFloor) {
+		this.time = time;
+		this.floorNum = floorNumber;
+		this.direction = direction;
+		this.destinationFloorNum = destinationFloor;
+	}
+	
+	/**
+	 * Reads a string for EventFile and creates a FloorEvent object
+	 * 
+	 * @param eventString	String, the event string
+	 * @throws ParseException if parsing of string fails
+	 */
+	public FloorEvent(String eventString) throws ParseException {
+		String[] splitString = eventString.split(" ");
+		if (splitString.length == 4) {
+			time = splitString[0];
+			direction = Direction.parseDirection(splitString[2]);
+
 			try {
-				this.floorNum = Integer.parseInt(splitString[1]);
-				this.floorDestinationNum = Integer.parseInt(splitString[3]);
+				floorNum = Integer.parseInt(splitString[1]);
+				destinationFloorNum = Integer.parseInt(splitString[3]);
 			} catch (NumberFormatException e) {
-				throw new ParseException("Invalid floor event numbers", 1);
+				throw new ParseException("EventFile parsing failed", 0);
 			}
+
 		} else {
-			throw new ParseException("Invalid floor event", 1);
+			throw new ParseException("EventFile parsing failed", 0);
 		}
 		
 	}
-	
-	public FloorEvent(String time, int floorNum, Direction direction, int floorDestinationNum) {
-		this.time = time;
-		this.floorNum = floorNum;
-		this.direction = direction;
-		this.floorDestinationNum = floorDestinationNum;
-		
-	}
-	
 
+	public String getTime() { return this.time; }
+	
+	public int getFloorNumber() { return this.floorNum; }
+	
+	public Direction getDirection() { return this.direction; }
+	
+	public int getDestinationFloor() {return this.destinationFloorNum;}
+	
 	@Override
 	public String toString() {
-		return this.time + " " + String.valueOf(floorNum) + " " + direction.toString() + " " + String.valueOf(floorDestinationNum);
+		String str = time + " " + floorNum + " " + direction + " " + destinationFloorNum;
+		return str;
 	}
 	
-	@Override
-	public boolean equals(Object o) {
-		
-		if(o instanceof FloorEvent) {
-			FloorEvent test = (FloorEvent) o;
-			
-			if(test.direction == this.direction && test.floorDestinationNum == this.floorDestinationNum && test.floorNum == this.floorNum && test.time == this.time) {
-				return true;
-			}
-			
-		}
-		
-		return false;
-		
-		
-	}
 	
 	
 
