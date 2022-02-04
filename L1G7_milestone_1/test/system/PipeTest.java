@@ -20,7 +20,6 @@ class PipeTest {
 	void pipeTest() {
 		Pipe p = new Pipe();
 		FloorEvent e = new FloorEvent("00:00:00.00000000",1,Direction.UP,5);
-		p.sendFloorEvent(e);
 		assertEquals(p.getNextEvent(),e);
 
 	}
