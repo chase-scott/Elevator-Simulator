@@ -2,6 +2,7 @@
   <p>
     Short script that calculates important elevator timing data.<br>
     Very rough code formatting. Will reformat at a later date (along with updating this README.md file).<br>
+    <a href="./Elevator-Timing-Report.pdf">Elevator Timing Report</a>  provides additional information on how we came to the final values.
   </p>
   
 <h2>Iteration #0 Work Products Values</h2>
