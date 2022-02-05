@@ -11,7 +11,8 @@ Group Members: 	       Chase Scott – 101092194
 -	Wrote the code implementing Iteration1 in file L1G1_milestsone_1
 -	Overviewed the other parts of the project
 •	Kenny Deng
--	Wrote the code for Elevator timing Data and did the calculations
+-	Wrote the code for Elevator Timing Data calculations 
+-	Wrote report explaining Elevator Timing Data calculations
 -	Overviewed the other parts of the project
 •	Colin Marsh
 -	Wrote the code for the test cases
