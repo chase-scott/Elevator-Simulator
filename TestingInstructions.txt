@@ -1,0 +1,10 @@
+Testing Instructions
+
+Run Configurations...
+Junit -> New Configuration
+Project: L1G7_milestone_1
+Test runner: JUnit 5
+Test class: system.SystemTest
+Test method: systemTest
+
+Apply -> Run 
