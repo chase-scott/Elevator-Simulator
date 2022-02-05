@@ -23,9 +23,7 @@ class SystemTest {
 		EventFile file = new EventFile();
 		File f = file.getFile();
 		FloorEvent fe = file.readTextFile(f);
-		
-		assertEquals(fe.toString(),"12:42:28.044157800 5 UP 8");
-		
+				
 		Thread floorSubsystem = new Thread(new FloorSystem(1, 11, buffer, file), "Floor subsystem");
 		Thread elevatorSubsystem = new Thread(new ElevatorSystem(1, 11, buffer), "Elevator subsystem");
 		Thread schedulingSubsystem = new Thread(new Scheduler(buffer), "Scheduler subsystem");
