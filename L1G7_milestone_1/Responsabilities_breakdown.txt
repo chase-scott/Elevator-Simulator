@@ -1,0 +1,26 @@
+           Breakdown of responsibilities of each team member
+
+Iteration 0 & Iteration 1
+Group Members: 	       Chase Scott – 101092194
+		       Kenny Deng – 101122713
+		       Colin Marsh – 101112765
+		       Wilson Amoussougbo – 101119293
+		       Cory Helm – 101171699
+
+•	Chase Scott
+-	Wrote the code implementing Iteration1 in file L1G1_milestsone_1
+-	Overviewed the other parts of the project
+•	Kenny Deng
+-	Wrote the code for Elevator timing Data and did the calculations
+-	Overviewed the other parts of the project
+•	Colin Marsh
+-	Wrote the code for the test cases
+-	Overviewed the other parts of the project
+•	Wilson Amoussougbo
+-	Wrote the README.txt file as well as the Group Responsibilities breakdown
+-	Overviewed the other parts of the project
+•	Cory Helm
+-	Made the UML and sequence Diagram
+-	Overviewed the other parts of the project
+
+
