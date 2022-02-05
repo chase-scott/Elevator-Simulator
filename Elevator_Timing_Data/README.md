@@ -4,12 +4,6 @@
     Very rough code formatting. Will reformat at a later date (along with updating this README.md file).<br>
   </p>
   
- <h2>TODO</h2>
-  <p>
-    Convert paper calculations and drawings into electronic versions (acceleration average calculation, etc). <br>
-    Format, clean up, and restructure script. <br>
-  </p>
-  
 <h2>Iteration #0 Work Products Values</h2>
   <p>
     Elevator Acceleration (Calculated): 1.181834708105293 metres/second^2 <br>
