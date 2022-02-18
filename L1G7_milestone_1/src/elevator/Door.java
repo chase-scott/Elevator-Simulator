@@ -19,7 +19,7 @@ public class Door {
 	}
 	
 	public void switchState() {
-		state.switchState();
+		state = state.switchState();
 	}
 	
 	@Override

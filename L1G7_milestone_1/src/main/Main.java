@@ -25,16 +25,6 @@ public class Main {
 		schedulingSubsystem.start();
 		
 		
-		new FloorEvent();
-		
-		try {
-			Thread.sleep(1500);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		//new FloorEvent();
-		
 		
 	}
 	

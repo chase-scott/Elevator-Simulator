@@ -34,13 +34,13 @@ public class Scheduler implements Runnable {
 	public void run() {
 		while (true) {
 			if (pipe.isFloorToScheduler()) {
-				handleFloorEvent(pipe.getFloorEvent());
+				handleFloorEvent(pipe.getGeneratedEvent());
 			}
 			if (pipe.isElevatorToScheduler()) {
 				handleElevatorEvent();
 			}
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(250);
 			} catch (InterruptedException e) {e.printStackTrace();}
 		}
 	}

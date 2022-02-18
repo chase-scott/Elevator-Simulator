@@ -62,9 +62,9 @@ public class EventFile {
 	 * Parses the EventFile for an event
 	 * 
 	 * @param file	File, the file to parse
-	 * @return	FloorEvent, the parsed event
+	 * @return	FloorEvent[], the parsed events
 	 */
-	public static FloorEvent readTextFile(File file) {
+	public static FloorEvent[] readTextFile(File file) {
 		 StringBuilder contentBuilder = new StringBuilder();
 	        try (BufferedReader br = new BufferedReader(new FileReader(EVENT_FILEPATH))) 
 	        {
@@ -72,7 +72,7 @@ public class EventFile {
 	            String sCurrentLine;
 	            while ((sCurrentLine = br.readLine()) != null) 
 	            {
-	                contentBuilder.append(sCurrentLine);
+	                contentBuilder.append(sCurrentLine + "\n");
 	            }
 	        } 
 	        catch (IOException e) 
@@ -81,14 +81,20 @@ public class EventFile {
 	        }
 	        
 	        
-	        FloorEvent event = null;
-	        try {
-				event = new FloorEvent(contentBuilder.toString());
+        	String[] eventStrings = contentBuilder.toString().split("\n");
+        	FloorEvent[] events = new FloorEvent[eventStrings.length];
+	        
+        	try {
+	   
+				for(int i = 0; i < events.length; i++) {
+					events[i] = new FloorEvent(eventStrings[i]);
+				}
+
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
 	        
-	        return event;
+	        return events;
 	}
 
 

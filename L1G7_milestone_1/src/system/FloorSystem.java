@@ -44,32 +44,41 @@ public class FloorSystem implements Runnable {
 	 * Monitors the EventFile for any updates.
 	 * If an updated is detected, send it to the scheduler.
 	 */
-	private void monitor() {
+	private void readEventFile() {
 
-		//if file has been updated, retrieve floor event and send to scheduler
-		if (eventFile.isFileUpdated()) {
+		//read all events in file and send them to scheduler
+		FloorEvent[] events = EventFile.readTextFile(eventFile.getFile());
+		
+		for(FloorEvent e : events) {
 			
-			FloorEvent e = EventFile.readTextFile(eventFile.getFile());
 			System.out.println(Thread.currentThread().getName() + " has received a new FloorEvent >>> {" + e.toString() + "}\nSending signal to Scheduler...\n");
-
 			pipe.floorToScheduler(e);
-		}
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+	
+		}		
 	}
 
 	@Override
 	public void run() {
+		
+		//read events from file and send them to scheduler
+		readEventFile();
+		
 		while (true) {
 			
 			//if scheduler is sending a signal to this system, handle it.
-			//else, monitor EventFile
 			if (pipe.isSchedulerToFloor()) {
 				handleEvent();
-			} else {
-				monitor();
-			}
+			} 
 			
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(250);
 			} catch (InterruptedException e) {e.printStackTrace();}
 			
 		}

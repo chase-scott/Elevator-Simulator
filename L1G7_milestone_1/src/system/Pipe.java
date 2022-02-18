@@ -1,6 +1,6 @@
 package system;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import event.FloorEvent;
@@ -15,18 +15,17 @@ public class Pipe {
 	//State variables for checking if a message is being sent through the systems
 	private boolean elevatorToScheduler, schedulerToElevator, floorToScheduler, schedulerToFloor;
 	
-	//most recently queued floor event
-	private FloorEvent floorEvent;
-	
 	//List of queued floor events
 	private List<FloorEvent> events;
+
+	private FloorEvent generatedEvent;
 
 	public Pipe() {
 		floorToScheduler = false;
 		schedulerToFloor = false;
 		elevatorToScheduler = false;
 		schedulerToElevator = false;
-		events = new ArrayList<>();
+		events = new LinkedList<>();
 	}
 
 	/**
@@ -36,7 +35,7 @@ public class Pipe {
 	 * @param e	FloorEvent, the event
 	 */
 	public synchronized void floorToScheduler(FloorEvent e) {
-		floorEvent = e;
+		generatedEvent = e;
 		floorToScheduler = true;
 		notifyAll();
 	}
@@ -57,9 +56,12 @@ public class Pipe {
 	 * @param e
 	 */
 	public synchronized void sendToElevator(FloorEvent e) {
-		events.add(e);
 		
+		events.add(e);
+	
 		floorToScheduler = false;
+	
+		
 		while (schedulerToElevator) {
 			try {
 				wait();
@@ -87,8 +89,6 @@ public class Pipe {
 	 */
 	public FloorEvent getNextEvent() {	
 		
-		if(events.size() == 0) return null;
-		
 		return events.remove(0);
 	}
 
@@ -108,10 +108,6 @@ public class Pipe {
 		return schedulerToElevator;
 	}
 
-	public FloorEvent getFloorEvent() {
-		return floorEvent;
-	}
-
 	public void setSchedulerToElevator(boolean isEvent) {
 		schedulerToElevator = isEvent;
 	}
@@ -126,6 +122,10 @@ public class Pipe {
 
 	public void setFloorToScheduler(boolean isEvent) {
 		floorToScheduler = isEvent;
+	}
+
+	public FloorEvent getGeneratedEvent() {
+		return generatedEvent;
 	}
 
 }
