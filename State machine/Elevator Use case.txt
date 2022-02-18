@@ -1,0 +1,26 @@
+Use case for Elevator : Handles events and move
+
+Pre-condition: Scheduler sends floor event from floor subsystem
+               
+Post-condition: Scheduler receives return signal from elevator
+
+Primary Actor: Elevator subsystem
+Secondary Actor: Floor subsystem & Scheduler subsystem
+	
+Basic Flow:
+1- Elevator waits for floor event to be received from scheduler
+2- After event is received, elevator closes door.
+3- Elevator starts moving up/down depending on target floor
+4- After reaching destination, elevator stops and door is openned
+5- Elevator send return signal back to scheduler
+
+Extension
+Step 2: 
+A- Elevator never receives floor event from scheduler
+   1- Elevator waits for next floor event
+B- Someone blocks the door from closing
+   1- Elevator returns to step 2
+Step 3: 
+A- New target floor is received
+   1- Elevator goes to closer target floor and door opens
+   2- Door is closed and elevator goes to next target destination

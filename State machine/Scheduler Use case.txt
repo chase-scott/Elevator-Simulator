@@ -1,0 +1,31 @@
+Use case for Scheduler : Handle Floor and Elevator events
+
+Pre-condition: Floor subsystem has received a new FloorEvent
+               
+Post-condition: Floor subsystem has received the signal from the 
+elevator
+	
+Primary Actor: Scheduler subsystem
+Secondary Actor: Floor subsystem & Elevator subsystem
+	
+Basic Flow:
+1- A floor event is sent to scheduler after update detected in EventFile
+2- Scheduler waits for floor event
+3- After receiving floor event scheduler and adds it to a floor event queue
+4- The next floor event in line is then forwarded to the elevator 
+subsystem
+5- The scheduler subsystem waits for a return signal from the elevator
+subsystem
+6- After receiving the signal, the scheduler forward the return signal
+to the floor subsystem
+
+Extension
+Step 2: 
+A- Floor event is get losts and is not received by scheduler
+   1- The scheduler wait for next floor event to be sent
+Step 4 & 6:
+A- Scheduler is not able to send event/signal
+   1- The scheduler is put on pause and returns to initial state
+Step 5:
+A- The return signal gets lost and is not received by the scheduler
+   1- The scheduler is put on pause and returns to initial state
