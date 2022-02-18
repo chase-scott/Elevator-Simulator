@@ -20,5 +20,20 @@ class ElevatorTest {
 		assertEquals(e.getMotor().getState(), MotorState.IDLE);
 
 	}
+	
+	@Test
+	void pressButtonTest() {
+		Elevator e = new Elevator(1,11);
+		e.pressButton(5);
+		assertEquals(e.getPressedButtons().get(0).getTargetFloor(),5);
+		e.pressButton(6);
+		assertEquals(e.getPressedButtons().get(1).getTargetFloor(),6);
+		e.pressButton(7);
+		e.pressButton(8);
+		assertEquals(e.getPressedButtons().get(2).getTargetFloor(),7);
+		assertEquals(e.getPressedButtons().get(3).getTargetFloor(),8);
+
+
+	}
 
 }
