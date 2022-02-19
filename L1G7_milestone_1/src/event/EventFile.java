@@ -15,7 +15,7 @@ import java.text.ParseException;
 public class EventFile {
 	
 	//file path for event file
-	public static String EVENT_FILEPATH = "eventfolder/eventFile.txt";
+	public static String EVENT_FILEPATH = "L1G7_milestone_1/eventfolder/eventFile.txt";
 	
 	private long timeStamp;
 	private File file;

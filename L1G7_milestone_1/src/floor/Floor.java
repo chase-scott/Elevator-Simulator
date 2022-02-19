@@ -30,6 +30,7 @@ public class Floor {
 	}
 	
 	public int getFloorNumber() {return this.floorNumber;}
+	//public ArrayList getFloorButtons() {return this.buttons;} // TODO, will use later for testing, not currently working
 	
 	
 	
