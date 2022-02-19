@@ -16,9 +16,9 @@ public class Main {
 		Pipe buffer = new Pipe();
 		EventFile file = new EventFile();
 		
-		Thread floorSubsystem = new Thread(new FloorSystem(1, 11, buffer, file), "Floor subsystem");
-		Thread elevatorSubsystem = new Thread(new ElevatorSystem(1, 11, buffer), "Elevator subsystem");
-		Thread schedulingSubsystem = new Thread(new Scheduler(buffer), "Scheduler subsystem");
+		Thread floorSubsystem = new Thread(new FloorSystem(1, 11, buffer, file), "Floor Subsystem");
+		Thread elevatorSubsystem = new Thread(new ElevatorSystem(1, 11, buffer), "Elevator Subsystem");
+		Thread schedulingSubsystem = new Thread(new Scheduler(buffer), "Scheduler Subsystem");
 		
 		floorSubsystem.start();
 		elevatorSubsystem.start();

@@ -51,13 +51,13 @@ public class FloorSystem implements Runnable {
 		
 		for(FloorEvent e : events) {
 			
-			System.out.println(Thread.currentThread().getName() + " has received a new FloorEvent >>> {" + e.toString() + "}\nSending signal to Scheduler...\n");
+			System.out.println(Thread.currentThread().getName() + " has received a new FloorEvent:\nTime = " + e.getTime() + "\nFloor# = " + e.getFloorNumber() + 
+				"\nDestination Floor# = " + e.getDestinationFloor() + "\nDirection = " + e.getDirection().toString() + "\n");
 			pipe.floorToScheduler(e);
 			
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 	

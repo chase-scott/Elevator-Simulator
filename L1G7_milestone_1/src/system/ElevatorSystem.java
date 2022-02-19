@@ -19,7 +19,7 @@ public class ElevatorSystem implements Runnable {
 	private boolean isMoving;
 	//the elevator associated with this system
 	private Elevator elevator;
-	
+	//current floor the elevator is on
 	private int currentFloor;
 
 
@@ -70,18 +70,37 @@ public class ElevatorSystem implements Runnable {
 		Motor elevatorMotor = elevator.getMotor();
 		FloorEvent event = pipe.getNextEvent();
 		
+		System.out.println("Elevator is handling event:\nTime = " + event.getTime() + "\nFloor# = " + event.getFloorNumber() + 
+				"\nDestination Floor# = " + event.getDestinationFloor() + "\nDirection = " + event.getDirection().toString() + "\n");
 		
-		if(event.getFloorNumber() > currentFloor) {
+		if(event.getFloorNumber() - currentFloor != 0) {
+			if(event.getFloorNumber() > currentFloor) {
+				elevatorMotor.setState(MotorState.UP);
+				try {
+					System.out.println("Elevator has started moving from " + currentFloor + " towards " + event.getFloorNumber());
+					move(Direction.UP, event.getFloorNumber() - currentFloor);
+				} catch (InterruptedException e) {e.printStackTrace();}
+			} else {
+				elevatorMotor.setState(MotorState.DOWN);
+				try {
+					System.out.println("Elevator has started moving from " + currentFloor + " towards " + event.getFloorNumber());
+					move(Direction.DOWN, currentFloor - event.getFloorNumber());
+				} catch (InterruptedException e) {e.printStackTrace();}
+			}
+		}
+		
+		if(event.getDestinationFloor() > currentFloor) {
 			elevatorMotor.setState(MotorState.UP);
 			try {
-				move(Direction.UP, event.getFloorNumber() - currentFloor);
+				System.out.println("Elevator has started moving from " + currentFloor + " towards " + event.getDestinationFloor());
+				move(Direction.UP, event.getDestinationFloor() - currentFloor);
 			} catch (InterruptedException e) {e.printStackTrace();}
 		} else {
 			elevatorMotor.setState(MotorState.DOWN);
 			try {
-				move(Direction.DOWN, event.getFloorNumber() - currentFloor);
-			} catch (InterruptedException e) {e.printStackTrace();
-			}
+				System.out.println("Elevator has started moving from " + currentFloor + " towards " + event.getDestinationFloor());
+				move(Direction.DOWN, currentFloor - event.getDestinationFloor());
+			} catch (InterruptedException e) {e.printStackTrace();}
 		}
 
 
@@ -91,39 +110,36 @@ public class ElevatorSystem implements Runnable {
 	
 	private void move(Direction direction, int floorsToMove) throws InterruptedException {
 		
-		System.out.println("\nElevator has started moving.\nCurrent floor = " + currentFloor);
-		
-		
 		
 		for (int i = 0; i < floorsToMove; i++) {
 			Thread.sleep(2000);
 
-			String str = "";
 			if (direction.equals(Direction.UP)) {
 				currentFloor++;
-				str += "The Elevator has moved up to floor " + currentFloor;
+				System.out.println("The Elevator has moved up to floor " + currentFloor);
 			} else {
 				currentFloor--;
-				str += "The Elevator has moved down to floor " + currentFloor;
+				System.out.println("The Elevator has moved down to floor " + currentFloor);
 			}
 			
-			System.out.println(str);
 			System.out.println(Thread.currentThread().getName() + " has signaled the lamps to the Scheduler.");
 			pipe.elevatorToScheduler();
 		}
-		System.out.println("The Elevator has reached the Floor!\nOpening the door...\"");
+		
+		
+		System.out.println("The elevator has reached its destination. Opening doors...");
 		Thread.sleep(1000);
 
 		elevator.getDoor().switchState();
-		System.out.println("Door state = " + elevator.getDoor().getState());
+		System.out.println("Doors are " + elevator.getDoor().getState() + "\n");
 		
-		System.out.println("letting passengers in...");
+		System.out.println("Loading/unloading passengers...\n");
 		Thread.sleep(5000);
-		System.out.println("PASSENGERS LOADED! Closing the door...\n");
+		System.out.println("Done. Closing doors...");
 		Thread.sleep(1000);
 		
 		elevator.getDoor().switchState();
-		System.out.println("Door state = " + elevator.getDoor().getState());
+		System.out.println("Door are " + elevator.getDoor().getState()+ "\n");
 		
 	}
 	

@@ -43,17 +43,6 @@ public class Elevator {
 		
 	}
 	
-	public List<ElevatorButton> getPressedButtons(){
-		List<ElevatorButton> pressed = new ArrayList<ElevatorButton>();
-		for(ElevatorButton b: buttons) {
-			if(b.getLamp().isLit()) {
-				pressed.add(b);
-			}
-		}
-		return pressed;
-	}
-	
-	
 	public Motor getMotor() {return motor;}
 	
 	public Door getDoor() {return door;}

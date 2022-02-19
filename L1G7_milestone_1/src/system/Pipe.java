@@ -19,6 +19,7 @@ public class Pipe {
 	private List<FloorEvent> events;
 
 	private FloorEvent generatedEvent;
+	
 
 	public Pipe() {
 		floorToScheduler = false;
@@ -76,6 +77,7 @@ public class Pipe {
 	/**
 	 * Send a signal from the elevator to the Scheduler.
 	 * Called by ElevatorSystem.
+	 * @param currentFloor 
 	 */
 	public synchronized void elevatorToScheduler() {
 		elevatorToScheduler = true;
