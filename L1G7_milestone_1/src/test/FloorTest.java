@@ -14,7 +14,7 @@ class FloorTest {
 	@Test
 	void floorTest() {
 		// test values
-		// bottom floor, midle floor, top floor
+		// bottom floor, middle floor, top floor
 		Floor f;
 		// int Floor(floorNumber, boolean topFloor, boolean bottomFloor)
 		f = new Floor(1,false,false);
