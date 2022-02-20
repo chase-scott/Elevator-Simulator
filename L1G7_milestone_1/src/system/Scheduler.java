@@ -44,6 +44,10 @@ public class Scheduler implements Runnable {
 		state = SchedulerState.SENDING;
 		
 	}
+	
+	public SchedulerState getSchedulerState() {
+		return this.state;
+	}
 
 	@Override
 	public void run() {
