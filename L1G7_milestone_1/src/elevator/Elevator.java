@@ -13,6 +13,7 @@ import state.MotorState;
  */
 public class Elevator {
 	
+	private int id;
 	private List<ElevatorButton> buttons;
 	private Motor motor;
 	private Door door;
@@ -20,11 +21,12 @@ public class Elevator {
 	private boolean isMoving;
 
 
-	public Elevator(int minFloor, int maxFloor,int startFloor) {
+	public Elevator(int minFloor, int maxFloor,int startFloor,int id) {
 		this.motor = new Motor(MotorState.IDLE);
 		this.door = new Door(DoorState.CLOSED);
 		this.currentFloor = startFloor;
 		this.isMoving = false;
+		this.id = id;
 		this.buttons = new ArrayList<ElevatorButton>();
 		for(int i = minFloor; i < maxFloor; i++) {
 			buttons.add(new ElevatorButton(i));
@@ -59,6 +61,8 @@ public class Elevator {
 	public void moveUpFloor() {currentFloor++;}
 	
 	public void moveDownFloor() {currentFloor--;}
+	
+	public int getId() {return id;}
 	
 	public int getFloorNum() {return currentFloor;}
 	

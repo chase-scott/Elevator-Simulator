@@ -12,7 +12,7 @@ class ElevatorTest {
 
 	@Test
 	void elevatorTest() {
-		Elevator e = new Elevator(1,11,1);
+		Elevator e = new Elevator(1,11,1,1);
 		assertEquals(e.getDoor().getState(), DoorState.CLOSED);
 		assertEquals(e.getMotor().getState(), MotorState.IDLE);
 

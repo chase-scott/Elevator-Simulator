@@ -61,7 +61,7 @@ class ElevatorSystemTest {
 	void buildPacketDataTest() {
 		Pipe buffer = new Pipe();
 		ElevatorSystem es = new ElevatorSystem(1, 11, buffer);
-		Elevator e = new Elevator(1,11,1);
+		Elevator e = new Elevator(1,11,1,1);
 
 		byte[] data = es.buildPacketData(e);
 		for(int i = 0;i<data.length;i++) {

@@ -35,7 +35,7 @@ public class ElevatorSystem implements Runnable {
 
 	public ElevatorSystem(int MIN_FLOOR, int MAX_FLOOR, Pipe pipe) {
 		elevators = new ArrayList<>();
-		this.elevators.add(new Elevator(MIN_FLOOR, MAX_FLOOR,MIN_FLOOR));
+		this.elevators.add(new Elevator(MIN_FLOOR, MAX_FLOOR,MIN_FLOOR,1));
 		this.pipe = pipe;
 	}
 
@@ -202,6 +202,7 @@ public class ElevatorSystem implements Runnable {
 	
 	public byte[] buildPacketData(Elevator e) {
 		System.out.println("ElevatorSystem: Building data packet");
+		byte elevator_id = (byte)e.getId();
 		byte floor_num = (byte)e.getFloorNum();
 		byte[] moving;
 		if(e.getIsMoving()==true) {
@@ -211,14 +212,15 @@ public class ElevatorSystem implements Runnable {
 		}
 		byte[] motor = e.getMotor().getState().getState().getBytes();
 		byte[] door = e.getDoor().getState().getState().getBytes();
-		int data_size = 1 + moving.length + motor.length + door.length + 5;		
+		int data_size = 3 + moving.length + motor.length + door.length + 5;		
 		byte[] data = new byte[data_size];
 		
-		
-		//Add floor num byte to data byte array	
-		data[0]=floor_num;
+		data[0] = elevator_id;
 		data[1] = 0;
-		int j =2;
+		//Add floor num byte to data byte array	
+		data[2]=floor_num;
+		data[3] = 0;
+		int j =4;
 		//Add moving byte array to data byte array
 		for(int i = 0; i < moving.length ; i++) {
 			data[j]=moving[i];
@@ -243,6 +245,10 @@ public class ElevatorSystem implements Runnable {
 		return data;
 		//
 		
+	}
+	
+	public Elevator getElevator(int index) {
+		return elevators.get(index);
 	}
 
 }

@@ -113,6 +113,7 @@ public class FloorSystem implements Runnable {
 		data[j] = 0;
 		return data;
 	}
+	
 
 	@Override
 	public void run() {
