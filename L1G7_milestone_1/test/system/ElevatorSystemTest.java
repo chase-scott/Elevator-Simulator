@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import event.EventFile;
+import event.FloorEvent;
 import state.Direction;
 
 /**
@@ -33,6 +34,25 @@ class ElevatorSystemTest {
 		assertEquals(buffer.isFloorToScheduler(),false);
 		assertEquals(buffer.isSchedulerToElevator(),true);
 		assertEquals(buffer.isSchedulerToFloor(),false);
+
+	}
+	@Test
+	void decodePacketDataTest() {
+		EventFile file = new EventFile();
+		FloorEvent[] events = EventFile.readTextFile(file.getFile());
+		Pipe buffer = new Pipe();
+		ElevatorSystem es = new ElevatorSystem(1, 11, buffer);
+		FloorSystem fs = new FloorSystem(1, 11, buffer, file);
+		byte[] data = fs.buildPacketData(events[0]);
+		for(int i = 0;i<data.length;i++) {
+			System.out.print(data[i] +" ");
+		}
+		System.out.print("\n");
+		FloorEvent fe = es.decodePacketData(data);
+		System.out.println(fe.getTime());
+		System.out.println(fe.getFloorNumber());
+		System.out.println(fe.getDirection());
+		System.out.println(fe.getDestinationFloor());
 
 	}
 

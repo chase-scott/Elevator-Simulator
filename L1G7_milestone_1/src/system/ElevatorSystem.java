@@ -154,5 +154,51 @@ public class ElevatorSystem implements Runnable {
 		
 	}
 	
+	public FloorEvent decodePacketData(byte[] data) {
+		int zero_count = 0;
+		byte[] time = new byte[20];
+		byte[] floor_num = new byte[1];
+		byte[] direction = new byte[2];
+		byte[] floor_dest_num = new byte[1];
+		int timecount = 0, floornum_count = 0, direction_count = 0, dest_count = 0;
+		for(int i = 0 ; i < data.length;i++) {
+			if(data[i] == 0) {
+				zero_count++;
+			}
+			else if(zero_count==0) {
+				time[timecount] = data[i];
+				timecount++;
+			}
+			else if(zero_count==1) {
+				floor_num[floornum_count] = data[i];
+				floornum_count++;
+			}
+			else if(zero_count==2) {
+				direction[direction_count] = data[i];
+				direction_count++;
+			}
+			else if(zero_count==3) {
+				floor_dest_num[dest_count] = data[i];
+				dest_count++;
+			}
+		}
+		String time_string = new String(time);
+		System.out.println(time_string);
+		int floor_int = floor_num[0];
+		System.out.println(floor_int);
+		String direction_string = new String(direction);
+		Direction direc;
+
+		if(direction_string.strip().equals("up")) {
+			direc = Direction.UP;
+		}else {
+			direc = Direction.DOWN;
+		}
+		System.out.println(direction_string);
+		int dest_floor_int = floor_dest_num[0];
+		System.out.println(dest_floor_int);
+		FloorEvent fe = new FloorEvent(time_string,floor_int,direc,dest_floor_int);
+		return fe;
+	}
 
 }

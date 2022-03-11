@@ -73,15 +73,15 @@ public class FloorSystem implements Runnable {
 		}		
 	}
 	
-	private byte[] buildPacketData(FloorEvent fe) {
+	public byte[] buildPacketData(FloorEvent fe) {
 		System.out.println("FloorSystem: Building data packet");
 		//Getting byte arrays of FloorEvent attributes
 		byte[] time = fe.getTime().getBytes();
-		byte[] floor_num = Integer.toString(fe.getFloorNumber()).getBytes();
+		byte floor_num = (byte) fe.getFloorNumber();
 		byte[] direction = fe.getDirection().getState().getBytes();
-		byte[] floor_dest_num = Integer.toString(fe.getDestinationFloor()).getBytes();
+		byte floor_dest_num = (byte)fe.getDestinationFloor();
 		//Data size is size of FloorEvent attribute byte arrays, plus 5 zero bytes
-		int data_size = time.length+floor_num.length+direction.length+floor_dest_num.length+5;
+		int data_size = time.length+1+direction.length+1+5;
 		byte[] data = new byte[data_size];
 		//Add time byte array to data byte array
 		for(int i = 0; i < time.length ; i++) {
@@ -90,10 +90,10 @@ public class FloorSystem implements Runnable {
 		int j = time.length;
 		data[j] = 0;
 		//Add floor num byte array to data byte array
-		for(int i = 0; i < floor_num.length ; i++) {
-			j++;
-			data[j]=floor_num[i];
-		}
+		
+		j++;
+		data[j]=floor_num;
+		
 		j++;
 		data[j] = 0;
 		//Add direction byte array to data byte array
@@ -104,10 +104,9 @@ public class FloorSystem implements Runnable {
 		j++;
 		data[j] = 0;
 		//Add destination floor num byte array to data byte array
-		for(int i = 0; i < floor_dest_num.length ; i++) {
-			j++;
-			data[j]=floor_dest_num[i];
-		}
+		j++;
+		data[j]=floor_dest_num;
+		
 		j++;
 		data[j] = 0;
 		j++;
