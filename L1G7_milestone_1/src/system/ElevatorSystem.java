@@ -11,6 +11,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -23,11 +24,9 @@ public class ElevatorSystem implements Runnable {
 	//the pipe through with this system communicates
 	private Pipe pipe;
 	//if the elevator is moving
-	private boolean isMoving;
 	//the elevator associated with this system
-	private Elevator elevator;
+	private ArrayList<Elevator> elevators;
 	//current floor the elevator is on
-	private int currentFloor;
 
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendReceiveSocket;
@@ -35,21 +34,21 @@ public class ElevatorSystem implements Runnable {
 
 
 	public ElevatorSystem(int MIN_FLOOR, int MAX_FLOOR, Pipe pipe) {
-		this.elevator = new Elevator(MIN_FLOOR, MAX_FLOOR);
+		elevators = new ArrayList<>();
+		this.elevators.add(new Elevator(MIN_FLOOR, MAX_FLOOR,MIN_FLOOR));
 		this.pipe = pipe;
-		this.isMoving = false;
-		this.currentFloor = MIN_FLOOR;
 	}
 
 	@Override
 	public void run() {
+		Elevator elevator = elevators.get(0);
 		while (true) {
 			//if there a floor event to handle
 			if (pipe.isSchedulerToElevator()) {
 				handleEvent();
 			}
 			//if the elevator is moving
-			if (isMoving) {
+			if (elevator.getIsMoving()) {
 				handleMove();
 			}
 			try {
@@ -62,14 +61,14 @@ public class ElevatorSystem implements Runnable {
 	 * Handles the event sent from the scheduler
 	 */
 	private void handleEvent() {
-
-		MotorState state = elevator.getMotor().getState();
+		Elevator e = elevators.get(0);
+		MotorState state = e.getMotor().getState();
 		//System.out.println("Current Elevator state >>> {" + currentFloor + ", " + state + "}\n");
 
 		//if the elevator isn't currently moving
 		if (state.equals(MotorState.IDLE)) {
 			pipe.setSchedulerToElevator(false);
-			isMoving = true;
+			e.setMoving(true);
 		}
 	}
 
@@ -77,60 +76,60 @@ public class ElevatorSystem implements Runnable {
 	 * Handles the elevator moving to the destination specified by the FloorEvent
 	 */
 	private void handleMove() {
-		
+		Elevator elevator = elevators.get(0);
 		Motor elevatorMotor = elevator.getMotor();
 		FloorEvent event = pipe.getNextEvent();
 		
 		System.out.println("Elevator is handling event:\nTime = " + event.getTime() + "\nFloor# = " + event.getFloorNumber() + 
 				"\nDestination Floor# = " + event.getDestinationFloor() + "\nDirection = " + event.getDirection().toString() + "\n");
 		
-		if(event.getFloorNumber() - currentFloor != 0) {
-			if(event.getFloorNumber() > currentFloor) {
+		if(event.getFloorNumber() - elevator.getFloorNum() != 0) {
+			if(event.getFloorNumber() > elevator.getFloorNum()) {
 				elevatorMotor.setState(MotorState.UP);
 				try {
-					System.out.println("Elevator has started moving from " + currentFloor + " towards " + event.getFloorNumber());
-					move(Direction.UP, event.getFloorNumber() - currentFloor);
+					System.out.println("Elevator has started moving from " + elevator.getFloorNum() + " towards " + event.getFloorNumber());
+					move(Direction.UP, event.getFloorNumber() - elevator.getFloorNum());
 				} catch (InterruptedException e) {e.printStackTrace();}
 			} else {
 				elevatorMotor.setState(MotorState.DOWN);
 				try {
-					System.out.println("Elevator has started moving from " + currentFloor + " towards " + event.getFloorNumber());
-					move(Direction.DOWN, currentFloor - event.getFloorNumber());
+					System.out.println("Elevator has started moving from " + elevator.getFloorNum() + " towards " + event.getFloorNumber());
+					move(Direction.DOWN, elevator.getFloorNum() - event.getFloorNumber());
 				} catch (InterruptedException e) {e.printStackTrace();}
 			}
 		}
 		
-		if(event.getDestinationFloor() > currentFloor) {
+		if(event.getDestinationFloor() > elevator.getFloorNum()) {
 			elevatorMotor.setState(MotorState.UP);
 			try {
-				System.out.println("Elevator has started moving from " + currentFloor + " towards " + event.getDestinationFloor());
-				move(Direction.UP, event.getDestinationFloor() - currentFloor);
+				System.out.println("Elevator has started moving from " + elevator.getFloorNum() + " towards " + event.getDestinationFloor());
+				move(Direction.UP, event.getDestinationFloor() - elevator.getFloorNum());
 			} catch (InterruptedException e) {e.printStackTrace();}
 		} else {
 			elevatorMotor.setState(MotorState.DOWN);
 			try {
-				System.out.println("Elevator has started moving from " + currentFloor + " towards " + event.getDestinationFloor());
-				move(Direction.DOWN, currentFloor - event.getDestinationFloor());
+				System.out.println("Elevator has started moving from " + elevator.getFloorNum() + " towards " + event.getDestinationFloor());
+				move(Direction.DOWN, elevator.getFloorNum() - event.getDestinationFloor());
 			} catch (InterruptedException e) {e.printStackTrace();}
 		}
 
 
 		elevatorMotor.setState(MotorState.IDLE);
-		isMoving = false;
+		elevator.setMoving(false);
 	}
 	
 	private void move(Direction direction, int floorsToMove) throws InterruptedException {
-		
+		Elevator elevator = elevators.get(0);
 		
 		for (int i = 0; i < floorsToMove; i++) {
 			Thread.sleep(2000);
 
 			if (direction.equals(Direction.UP)) {
-				currentFloor++;
-				System.out.println("The Elevator has moved up to floor " + currentFloor);
+				elevator.moveUpFloor();
+				System.out.println("The Elevator has moved up to floor " + elevator.getFloorNum());
 			} else {
-				currentFloor--;
-				System.out.println("The Elevator has moved down to floor " + currentFloor);
+				elevator.moveDownFloor();
+				System.out.println("The Elevator has moved down to floor " + elevator.getFloorNum());
 			}
 			
 			System.out.println(Thread.currentThread().getName() + " has signaled the lamps to the Scheduler.");
@@ -199,6 +198,51 @@ public class ElevatorSystem implements Runnable {
 		System.out.println(dest_floor_int);
 		FloorEvent fe = new FloorEvent(time_string,floor_int,direc,dest_floor_int);
 		return fe;
+	}
+	
+	public byte[] buildPacketData(Elevator e) {
+		System.out.println("ElevatorSystem: Building data packet");
+		byte floor_num = (byte)e.getFloorNum();
+		byte[] moving;
+		if(e.getIsMoving()==true) {
+			moving="T".getBytes();
+		}else {
+			moving="F".getBytes();
+		}
+		byte[] motor = e.getMotor().getState().getState().getBytes();
+		byte[] door = e.getDoor().getState().getState().getBytes();
+		int data_size = 1 + moving.length + motor.length + door.length + 5;		
+		byte[] data = new byte[data_size];
+		
+		
+		//Add floor num byte to data byte array	
+		data[0]=floor_num;
+		data[1] = 0;
+		int j =2;
+		//Add moving byte array to data byte array
+		for(int i = 0; i < moving.length ; i++) {
+			data[j]=moving[i];
+			j++;
+		}
+		data[j] = 0;
+		//Add destination floor num byte array to data byte array
+		j++;
+		for(int i = 0; i < motor.length ; i++) {
+			data[j]=motor[i];
+			j++;
+		}
+		data[j] = 0;
+		j++;
+		for(int i = 0; i < door.length ; i++) {
+			data[j]=door[i];
+			j++;
+		}
+		data[j] = 0;
+		j++;
+		data[j] = 0;		
+		return data;
+		//
+		
 	}
 
 }

@@ -16,11 +16,15 @@ public class Elevator {
 	private List<ElevatorButton> buttons;
 	private Motor motor;
 	private Door door;
+	private int currentFloor;
+	private boolean isMoving;
 
-	public Elevator(int minFloor, int maxFloor) {
+
+	public Elevator(int minFloor, int maxFloor,int startFloor) {
 		this.motor = new Motor(MotorState.IDLE);
 		this.door = new Door(DoorState.CLOSED);
-		
+		this.currentFloor = startFloor;
+		this.isMoving = false;
 		this.buttons = new ArrayList<ElevatorButton>();
 		for(int i = minFloor; i < maxFloor; i++) {
 			buttons.add(new ElevatorButton(i));
@@ -52,6 +56,15 @@ public class Elevator {
 		}
 		return pressed;
 	}
+	public void moveUpFloor() {currentFloor++;}
+	
+	public void moveDownFloor() {currentFloor--;}
+	
+	public int getFloorNum() {return currentFloor;}
+	
+	public boolean getIsMoving() {return isMoving;}
+	
+	public void setMoving(boolean move) {isMoving = move;}
 	
 	public Motor getMotor() {return motor;}
 	

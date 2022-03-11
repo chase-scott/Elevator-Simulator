@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
+import elevator.Elevator;
 import event.EventFile;
 import event.FloorEvent;
 import state.Direction;
@@ -54,6 +55,22 @@ class ElevatorSystemTest {
 		System.out.println(fe.getDirection());
 		System.out.println(fe.getDestinationFloor());
 
+	}
+	
+	@Test
+	void buildPacketDataTest() {
+		Pipe buffer = new Pipe();
+		ElevatorSystem es = new ElevatorSystem(1, 11, buffer);
+		Elevator e = new Elevator(1,11,1);
+
+		byte[] data = es.buildPacketData(e);
+		for(int i = 0;i<data.length;i++) {
+			System.out.print(data[i] + " ");
+		}
+
+		
+
+		
 	}
 
 }

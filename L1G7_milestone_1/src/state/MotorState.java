@@ -7,7 +7,7 @@ package state;
  */
 public enum MotorState {
 	
-	IDLE("idle"), UP("up"), DOWN("down");
+	IDLE("id"), UP("up"), DOWN("dn");
 	
 	private String state;
 
