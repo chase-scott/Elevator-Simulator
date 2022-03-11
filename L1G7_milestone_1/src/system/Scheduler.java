@@ -1,7 +1,13 @@
 package system;
 
 import java.util.ArrayList;
-
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
 import event.FloorEvent;
 import state.SchedulerState;
 
@@ -11,7 +17,10 @@ public class Scheduler implements Runnable {
 	private SchedulerState state; 
 	private ArrayList<FloorEvent> queue;
 	
-	
+	private DatagramSocket floorReceiveSocket, elevatorReceiveSocket, floorSendSocket, elevatorSendSocket;
+	private DatagramPacket floorSystemPacket, elevatorSystemPacket, floorSendPacket, elevatorSendPacket;
+	private final int FLOOR_PORT = 23;
+	private final int ELEVATOR_PORT = 69;
 
 	public Scheduler(Pipe pipe) {
 		this.pipe = pipe;

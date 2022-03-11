@@ -2,7 +2,13 @@ package system;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
 import event.*;
 import floor.Floor;
 
@@ -19,6 +25,9 @@ public class FloorSystem implements Runnable {
 	private Pipe pipe;
 	//The EventFile that is read for FloorEvents
 	private EventFile eventFile;
+	DatagramPacket sendPacket, receivePacket;
+	DatagramSocket sendReceiveSocket;
+	private final int SEND_PORT = 23; // the port to send the packets
 
 	public FloorSystem(int MIN_FLOOR, int MAX_FLOOR, Pipe pipe, EventFile eventFile) {
 		

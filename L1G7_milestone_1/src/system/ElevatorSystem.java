@@ -5,6 +5,13 @@ import elevator.Motor;
 import event.FloorEvent;
 import state.Direction;
 import state.MotorState;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
 
 /**
  * ElevatorSystem class
@@ -21,6 +28,10 @@ public class ElevatorSystem implements Runnable {
 	private Elevator elevator;
 	//current floor the elevator is on
 	private int currentFloor;
+
+	DatagramPacket sendPacket, receivePacket;
+	DatagramSocket sendReceiveSocket;
+	private final int SEND_PORT = 69;
 
 
 	public ElevatorSystem(int MIN_FLOOR, int MAX_FLOOR, Pipe pipe) {
