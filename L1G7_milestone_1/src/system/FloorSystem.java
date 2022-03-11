@@ -11,6 +11,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import event.*;
 import floor.Floor;
+import state.Direction;
 
 /**
  * FloorSystem class
@@ -57,7 +58,6 @@ public class FloorSystem implements Runnable {
 
 		//read all events in file and send them to scheduler
 		FloorEvent[] events = EventFile.readTextFile(eventFile.getFile());
-		
 		for(FloorEvent e : events) {
 			
 			System.out.println(Thread.currentThread().getName() + " has received a new FloorEvent:\nTime = " + e.getTime() + "\nFloor# = " + e.getFloorNumber() + 
@@ -71,6 +71,48 @@ public class FloorSystem implements Runnable {
 			}
 	
 		}		
+	}
+	
+	private byte[] buildPacketData(FloorEvent fe) {
+		System.out.println("FloorSystem: Building data packet");
+		//Getting byte arrays of FloorEvent attributes
+		byte[] time = fe.getTime().getBytes();
+		byte[] floor_num = Integer.toString(fe.getFloorNumber()).getBytes();
+		byte[] direction = fe.getDirection().getState().getBytes();
+		byte[] floor_dest_num = Integer.toString(fe.getDestinationFloor()).getBytes();
+		//Data size is size of FloorEvent attribute byte arrays, plus 5 zero bytes
+		int data_size = time.length+floor_num.length+direction.length+floor_dest_num.length+5;
+		byte[] data = new byte[data_size];
+		//Add time byte array to data byte array
+		for(int i = 0; i < time.length ; i++) {
+			data[i]=time[i];
+		}
+		int j = time.length;
+		data[j] = 0;
+		//Add floor num byte array to data byte array
+		for(int i = 0; i < floor_num.length ; i++) {
+			j++;
+			data[j]=floor_num[i];
+		}
+		j++;
+		data[j] = 0;
+		//Add direction byte array to data byte array
+		for(int i = 0; i < direction.length ; i++) {
+			j++;
+			data[j]=direction[i];
+		}
+		j++;
+		data[j] = 0;
+		//Add destination floor num byte array to data byte array
+		for(int i = 0; i < floor_dest_num.length ; i++) {
+			j++;
+			data[j]=floor_dest_num[i];
+		}
+		j++;
+		data[j] = 0;
+		j++;
+		data[j] = 0;
+		return data;
 	}
 
 	@Override
