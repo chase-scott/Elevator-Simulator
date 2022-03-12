@@ -33,10 +33,16 @@ public class ElevatorSystem implements Runnable {
 	private final int SEND_PORT = 69;
 
 
-	public ElevatorSystem(int MIN_FLOOR, int MAX_FLOOR, Pipe pipe) {
-		elevators = new ArrayList<>();
-		this.elevators.add(new Elevator(MIN_FLOOR, MAX_FLOOR,MIN_FLOOR,1));
-		this.pipe = pipe;
+	public ElevatorSystem() {
+		
+		try {
+			sendReceiveSocket = new DatagramSocket();
+
+		} catch (SocketException se) {
+			se.printStackTrace();
+		}
+		
+		elevators = new ArrayList<Elevator>();
 	}
 
 	@Override
@@ -249,6 +255,10 @@ public class ElevatorSystem implements Runnable {
 	
 	public Elevator getElevator(int index) {
 		return elevators.get(index);
+	}
+	
+	public static void main(String[] args) {
+		new ElevatorSystem();
 	}
 
 }
