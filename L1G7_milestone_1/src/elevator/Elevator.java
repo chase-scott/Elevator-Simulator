@@ -5,13 +5,14 @@ import java.util.List;
 
 import state.DoorState;
 import state.MotorState;
+import system.Observer;
 
 /**
  * Elevator class
  * 
  * @author Chase Scott - 101092194
  */
-public class Elevator {
+public class Elevator implements Observer {
 	
 	private int id;
 	private List<ElevatorButton> buttons;
@@ -73,6 +74,12 @@ public class Elevator {
 	public Motor getMotor() {return motor;}
 	
 	public Door getDoor() {return door;}
+
+	@Override
+	public void update(byte[] data) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	
 

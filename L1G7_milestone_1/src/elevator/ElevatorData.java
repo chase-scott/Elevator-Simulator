@@ -25,12 +25,10 @@ public class ElevatorData {
 	private String status; //status for console messages
 	private boolean is_moving;
 	
-	public ElevatorData(int id,int curr_floor,DoorState ds,MotorState ms,boolean moving) {
+	public ElevatorData(int id,int curr_floor,MotorState ms) {
 		elevatorID = id;
 		currFloor = curr_floor;
-		door_state = ds;
 		motor_state = ms;
-		is_moving = moving;
 		
 	}
 	

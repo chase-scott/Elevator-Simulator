@@ -1,4 +1,4 @@
-package system;
+package test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,6 +9,9 @@ import event.EventFile;
 import floor.FloorEvent;
 import state.Direction;
 import state.SchedulerState;
+import system.ElevatorSystem;
+import system.Pipe;
+import system.Scheduler;
 
 class SchedulerTest {
 

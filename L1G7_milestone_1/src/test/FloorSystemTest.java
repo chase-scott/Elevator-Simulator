@@ -1,7 +1,7 @@
 /**
  * 
  */
-package system;
+package test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import event.EventFile;
 import state.Direction;
+import system.FloorSystem;
+import system.Pipe;
 
 /**
  * @author Colin

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package system;
+package test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,6 +11,9 @@ import elevator.Elevator;
 import event.EventFile;
 import event.FloorEvent;
 import state.Direction;
+import system.ElevatorSystem;
+import system.FloorSystem;
+import system.Pipe;
 
 /**
  * @author Colin
