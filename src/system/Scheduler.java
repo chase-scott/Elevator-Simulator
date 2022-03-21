@@ -6,6 +6,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -80,7 +82,8 @@ public class Scheduler {
 		}
 
 		// PACKET INFORMATION
-		System.out.println("ElevatorSystem Packet received:");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"]"
+				+ " ElevatorSystem Packet received:");
 		System.out.println("From: " + elevatorPacket.getAddress());
 		System.out.println("Port #: " + elevatorPacket.getPort());
 		int len = elevatorPacket.getLength();
@@ -121,7 +124,7 @@ public class Scheduler {
 		}
 
 		// PACKET INFORMATION
-		System.out.println("Scheduler Sending ack packet:");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] Scheduler Sending ack packet:");
 		System.out.println("To ElevatorSystem: " + ackPacket.getAddress());
 		System.out.println("Destination port: " + ackPacket.getPort());
 		len = ackPacket.getLength();
@@ -164,7 +167,7 @@ public class Scheduler {
 		}
 
 		// PACKET INFORMATION
-		System.out.println("FloorSystem Packet received:");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] FloorSystem Packet received:");
 		System.out.println("From: " + floorPacket.getAddress());
 		System.out.println("Port #: " + floorPacket.getPort());
 		int len = floorPacket.getLength();
@@ -185,7 +188,7 @@ public class Scheduler {
 
 			// TODO schedule the event and notify and add to event queue
 			FloorEvent fe = FloorEvent.unmarshal(data);
-			System.out.println("Received floor event with state: " + fe);
+			System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] Received floor event with state: " + fe);
 			// floorEventQueue.add(fe);
 
 			floorEventQueue.add(chooseElevator(elevatorStates, fe));
@@ -199,7 +202,7 @@ public class Scheduler {
 		}
 
 		// PACKET INFORMATION
-		System.out.println("Scheduler Sending ack packet:");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] Scheduler Sending ack packet:");
 		System.out.println("To FloorSystem: " + ackPacket.getAddress());
 		System.out.println("Destination port: " + ackPacket.getPort());
 		len = ackPacket.getLength();

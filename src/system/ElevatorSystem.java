@@ -6,6 +6,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -108,8 +110,9 @@ public class ElevatorSystem {
 			e.printStackTrace();
 		}
 
-		// MESSAGE INFORMATION
-		System.out.println("ElevatorSystem: Sending packet:");
+		// MESSAGE INFORMATION		
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
+				+ "ElevatorSystem: Sending packet:");
 		System.out.println("To host: " + sendPacket.getAddress());
 		System.out.println("Destination host port: " + sendPacket.getPort());
 		int len = sendPacket.getLength();
@@ -125,7 +128,8 @@ public class ElevatorSystem {
 			e.printStackTrace();
 		}
 
-		System.out.println("ElevatorSystem: Packet sent.\n");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"]"
+				+ " ElevatorSystem: Packet sent.\n");
 
 		// receiving data
 		byte[] ack = new byte[256];
@@ -141,7 +145,8 @@ public class ElevatorSystem {
 		//if move data was received, update observers
 		if(ack[0] == 1) this.updateObservers(ack);
 
-		System.out.println("ElevatorSystem: returnPacket received: " + new String(Arrays.toString(ack)) + "\n");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
+				+ "ElevatorSystem: returnPacket received: " + new String(Arrays.toString(ack)) + "\n");
 
 		return ack;
 

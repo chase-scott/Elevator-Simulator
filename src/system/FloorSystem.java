@@ -6,6 +6,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -112,7 +114,8 @@ public class FloorSystem {
 		}
 
 		// MESSAGE INFORMATION
-		System.out.println("FloorSystem: Sending packet:");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
+				+ "FloorSystem: Sending packet:");
 		System.out.println("To host: " + sendPacket.getAddress());
 		System.out.println("Destination host port: " + sendPacket.getPort());
 		int len = sendPacket.getLength();
@@ -128,7 +131,8 @@ public class FloorSystem {
 			e.printStackTrace();
 		}
 
-		System.out.println("FloorSystem: Packet sent.\n");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
+				+ "FloorSystem: Packet sent.\n");
 
 		// Wait on acknowledgment
 		byte[] ack = new byte[25];
@@ -143,14 +147,16 @@ public class FloorSystem {
 		
 		if(ack[0] == 1) this.updateObservers(ack);
 
-		System.out.println("FloorSystem: returnPacket received: " + new String(Arrays.toString(ack)) + "\n");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
+				+ "FloorSystem: returnPacket received: " + new String(Arrays.toString(ack)) + "\n");
 
 		return ack;
 
 	}
 	
 	private void updateObservers(byte[] data) {
-		System.out.println("Updating lamps...");
+		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
+				+ "Updating lamps...");
 		floorObservers.forEach(e -> e.update(data));
 	}
 	public ArrayList<Observer> getFloors(){
