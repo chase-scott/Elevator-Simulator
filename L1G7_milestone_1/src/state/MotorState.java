@@ -7,16 +7,29 @@ package state;
  */
 public enum MotorState {
 	
-	IDLE("id"), UP("up"), DOWN("dn");
+	IDLE(1), UP(2), DOWN(3), INVALID(-1);
 	
-	private String state;
+	private int state;
 
-	MotorState(String state) {
+	MotorState(int state) {
 		this.state = state;
 	}
 	
-	public String getState() {
+	public int getState() {
 		return this.state;
+	}
+	
+	public static MotorState setState(int state) {
+		switch(state) {
+		case 1:
+			return IDLE;
+		case 2:
+			return UP;
+		case 3:
+			return DOWN;
+		default:
+			return INVALID;
+		}
 	}
 	
 }

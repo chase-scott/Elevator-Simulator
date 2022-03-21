@@ -7,7 +7,7 @@ package state;
  */
 public enum DoorState {
 	
-	OPEN("op"), CLOSED("cd");
+	OPEN("open"), CLOSED("closed");
 	
 	private String state;
 

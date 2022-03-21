@@ -7,15 +7,15 @@ package state;
  */
 public enum Direction {
 	
-	UP("up"), DOWN("dn");
+	UP(2), DOWN(3), INVALID(-1);
 	
-	private String state;
+	private int state;
 	
-	Direction(String state) {
+	Direction(int state) {
 		this.state = state;
 	}
 	
-	public String getState() {
+	public int getState() {
 		return this.state;
 	}
 	
@@ -29,7 +29,7 @@ public enum Direction {
 		switch(direction.toLowerCase()) {
 			case "up":
 				return UP;
-			case "dn":
+			case "down":
 				return DOWN;
 			default:
 				return null;

@@ -1,137 +1,167 @@
 package system;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import event.*;
+import java.util.HashMap;
+
+import event.FloorEvent;
 import floor.Floor;
-import state.Direction;
 
-/**
- * FloorSystem class
- * 
- * @author Chase Scott - 101092194
- */
-public class FloorSystem implements Runnable {
+public class FloorSystem {
 
-	//The floors of the building
-	private List<Floor> floors;
-	//The pipe through which this system communicates
-	private Pipe pipe;
-	//The EventFile that is read for FloorEvents
-	private EventFile eventFile;
 	DatagramPacket sendPacket, receivePacket;
 	DatagramSocket sendReceiveSocket;
+	
+	private ArrayList<Observer> floorObservers;
+
+
+	private static byte[] DATA_REQUEST = { 2 };
 	private final int SEND_PORT = 23; // the port to send the packets
 
-	public FloorSystem(int MIN_FLOOR, int MAX_FLOOR, Pipe pipe, EventFile eventFile) {
+	public FloorSystem(int MIN_FLOOR, int MAX_FLOOR) {
 		
-		floors = new ArrayList<Floor>();
+		//add floorObservers for each floor
+		floorObservers = new ArrayList<>();
 		for (int i = MIN_FLOOR; i <= MAX_FLOOR; i++) {
-			floors.add(new Floor(i, i == MIN_FLOOR, i == MAX_FLOOR));
+			floorObservers.add(new Floor(i, i == MIN_FLOOR, i == MAX_FLOOR));
 		}
 		
-		this.pipe = pipe;
-		this.eventFile = eventFile;
-	}
 
-	/**
-	 * Handles the event sent from the scheduler
-	 */
-	private void handleEvent() {
-
-		System.out.println(Thread.currentThread().getName() + " has received the signal from the elevator.\n");
-		pipe.setSchedulerToFloor(false);
-	}
-
-	/**
-	 * Monitors the EventFile for any updates.
-	 * If an updated is detected, send it to the scheduler.
-	 */
-	private void readEventFile() {
-
-		//read all events in file and send them to scheduler
-		FloorEvent[] events = EventFile.readTextFile(eventFile.getFile());
-		for(FloorEvent e : events) {
-			
-			System.out.println(Thread.currentThread().getName() + " has received a new FloorEvent:\nTime = " + e.getTime() + "\nFloor# = " + e.getFloorNumber() + 
-				"\nDestination Floor# = " + e.getDestinationFloor() + "\nDirection = " + e.getDirection().toString() + "\n");
-			pipe.floorToScheduler(e);
-			
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
-	
-		}		
-	}
-	
-	public byte[] buildPacketData(FloorEvent fe) {
-		System.out.println("FloorSystem: Building data packet");
-		//Getting byte arrays of FloorEvent attributes
-		byte[] time = fe.getTime().getBytes();
-		byte floor_num = (byte) fe.getFloorNumber();
-		byte[] direction = fe.getDirection().getState().getBytes();
-		byte floor_dest_num = (byte)fe.getDestinationFloor();
-		//Data size is size of FloorEvent attribute byte arrays, plus 5 zero bytes
-		int data_size = time.length+1+direction.length+1+5;
-		byte[] data = new byte[data_size];
-		//Add time byte array to data byte array
-		for(int i = 0; i < time.length ; i++) {
-			data[i]=time[i];
+		// open socket for sending and receiving data
+		try {
+			sendReceiveSocket = new DatagramSocket();
+		} catch (SocketException se) {
+			se.printStackTrace();
 		}
-		int j = time.length;
-		data[j] = 0;
-		//Add floor num byte array to data byte array
-		
-		j++;
-		data[j]=floor_num;
-		
-		j++;
-		data[j] = 0;
-		//Add direction byte array to data byte array
-		for(int i = 0; i < direction.length ; i++) {
-			j++;
-			data[j]=direction[i];
-		}
-		j++;
-		data[j] = 0;
-		//Add destination floor num byte array to data byte array
-		j++;
-		data[j]=floor_dest_num;
-		
-		j++;
-		data[j] = 0;
-		j++;
-		data[j] = 0;
-		return data;
-	}
-	
 
-	@Override
-	public void run() {
-		
-		//read events from file and send them to scheduler
-		readEventFile();
-		
+		byte[] return_data = {};
+
+		// continuously ask for elevator states
 		while (true) {
+
 			
-			//if scheduler is sending a signal to this system, handle it.
-			if (pipe.isSchedulerToFloor()) {
-				handleEvent();
-			} 
+			rpc_send(FloorEvent.marshal(new FloorEvent()), return_data);
 			
+
+			/*
+			 * if(new floor event) { rpc_send(FLOOR_EVENT, return_data); }
+			 */
+
 			try {
-				Thread.sleep(250);
-			} catch (InterruptedException e) {e.printStackTrace();}
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			rpc_send(DATA_REQUEST, return_data);
 			
 		}
+
+		// close socket
+		// sendReceiveSocket.close();
+
 	}
+	
+	public FloorSystem(int MIN_FLOOR, int MAX_FLOOR, String test) {
+		System.out.println(test);
+		//add floorObservers for each floor
+		floorObservers = new ArrayList<>();
+		for (int i = MIN_FLOOR; i <= MAX_FLOOR; i++) {
+			floorObservers.add(new Floor(i, i == MIN_FLOOR, i == MAX_FLOOR));
+		}
+		
+
+		// open socket for sending and receiving data
+		try {
+			sendReceiveSocket = new DatagramSocket();
+		} catch (SocketException se) {
+			se.printStackTrace();
+		}
+
+			
+		}
+
+	private void rpc_send(byte[] out, byte[] in) {
+
+		System.out.println(new String(in, 0, in.length));
+
+		in = send(out);
+
+		System.out.println(new String(in, 0, in.length));
+
+	}
+
+	/**
+	 * Send data to the scheduler
+	 * 
+	 * @param data byte[], the data to send
+	 */
+	private byte[] send(byte[] data) {
+
+		// create a new Datagram packet to send the message
+		try {
+			sendPacket = new DatagramPacket(data, data.length, InetAddress.getLocalHost(), SEND_PORT);
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+
+		// MESSAGE INFORMATION
+		System.out.println("FloorSystem: Sending packet:");
+		System.out.println("To host: " + sendPacket.getAddress());
+		System.out.println("Destination host port: " + sendPacket.getPort());
+		int len = sendPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.println("Containing: " + new String(sendPacket.getData(), 0, len));
+		System.out.println("Containing Bytes: " + Arrays.toString(sendPacket.getData()));
+		// MESSAGE INFORMATION
+
+		// try to send message over the socket at port 23
+		try {
+			sendReceiveSocket.send(sendPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("FloorSystem: Packet sent.\n");
+
+		// Wait on acknowledgment
+		byte[] ack = new byte[25];
+		receivePacket = new DatagramPacket(ack, ack.length);
+
+		try {
+			sendReceiveSocket.receive(receivePacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+
+		}
+		
+		if(ack[0] == 1) this.updateObservers(ack);
+
+		System.out.println("FloorSystem: returnPacket received: " + new String(Arrays.toString(ack)) + "\n");
+
+		return ack;
+
+	}
+	
+	private void updateObservers(byte[] data) {
+		System.out.println("Updating lamps...");
+		floorObservers.forEach(e -> e.update(data));
+	}
+	public ArrayList<Observer> getFloors(){
+		return floorObservers;
+	}
+	
+	
+	
+	public static void main(String[] args) {
+		
+		new FloorSystem(1, 22);
+	}
+
 }

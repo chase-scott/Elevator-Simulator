@@ -1,151 +1,333 @@
 package system;
 
-import java.util.ArrayList;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
-import elevator.ElevatorData;
 import event.FloorEvent;
-import state.DoorState;
-import state.MotorState;
+import state.Direction;
 import state.SchedulerState;
 
-public class Scheduler implements Runnable {
+public class Scheduler {
+
+	private DatagramSocket floorSocket, elevatorSocket;
+	private DatagramPacket floorPacket, ackPacket, elevatorPacket;
 	
-	private Pipe pipe;
-	private SchedulerState state; 
-	private ArrayList<FloorEvent> queue;
-	
-	private DatagramSocket floorReceiveSocket, elevatorReceiveSocket, floorSendSocket, elevatorSendSocket;
-	private DatagramPacket floorSystemPacket, elevatorSystemPacket, floorSendPacket, elevatorSendPacket;
+	private SchedulerState state;
+
+	private ArrayList<byte[]> floorEventQueue;
+	private byte[] elevatorStates = {1, 1, 1, 1, 0, 2, 1, 1, 0};
+
 	private final int FLOOR_PORT = 23;
 	private final int ELEVATOR_PORT = 69;
 
-	public Scheduler(Pipe pipe) {
-		this.pipe = pipe;
+	public Scheduler() {
+
+		floorEventQueue = new ArrayList<>();
+
+		try {
+			floorSocket = new DatagramSocket(FLOOR_PORT);
+			elevatorSocket = new DatagramSocket(ELEVATOR_PORT);
+		} catch (SocketException se) {
+			se.printStackTrace();
+			System.exit(1);
+		}
+		
 		this.state = SchedulerState.IDLE;
-		queue = new ArrayList<FloorEvent>();
 
-	}
+		new Thread(new Runnable() {
+			public void run() {
+				while (true) {
 
+					// elevatorsystem --> scheduler --> elevatorsystem
+					reply2();
 
-	public void handleFloorEvent(FloorEvent e) {
-		
-		queue.add(e);
-	
-		System.out.println(Thread.currentThread().getName() + " has received FloorEvent:\nTime = " + e.getTime() + "\nFloor# = " + e.getFloorNumber() + 
-				"\nDestination Floor# = " + e.getDestinationFloor() + "\nDirection = " + e.getDirection().toString() + "\n");
-		
-		//scheduler state sending
-		state = SchedulerState.SENDING;
-		pipe.sendToElevator(queue.remove(0));
-		
-	}
+				}
+			}
+		}).start();
 
-	public void handleElevatorEvent() {
-		System.out.println(Thread.currentThread().getName() + " has received elevator signal. Sending signal to FloorSystem");
-		
-		
-		pipe.setElevatorToScheduler(false);
-		pipe.schedulerToFloor();
-		//scheduler state sending
-		state = SchedulerState.SENDING;
-		
-	}
-	
-	public SchedulerState getSchedulerState() {
-		return this.state;
-	}
-	
-	public ElevatorData decodePacketData(byte[] data) {
-		byte id = 0;
-		byte[] motor = new byte[2];
-		byte[] moving = new byte[1];
-		byte floornum = 0;
-		byte[] door = new byte[2];
-		int zero_count =0, motor_count = 0, moving_count = 0, door_count = 0;
-		for(int i = 0 ; i < data.length;i++) {
-			if(data[i] == 0) {
-				zero_count++;
-			}
-			else if(zero_count==0) {
-				id = data[i];
-			}
-			else if(zero_count==1) {
-				floornum = data[i];
-			}
-			else if(zero_count==2) {
-				moving[0] = data[i];
-			}
-			else if(zero_count==3) {
-				motor[motor_count] = data[i];
-				motor_count++;
-			}
-			else{
-				door[door_count] = data[i];
-				door_count++;
-			}
-		}	
-		
-		int id_int = id;
-		int floor_int = floornum;
-		String motor_string = new String(motor);
-		String moving_string = new String(moving);
-		String door_string = new String(door);
-		DoorState ds;
-		MotorState ms;
-		boolean is_moving;
-		if(motor_string.equals("id")) {
-			ms = MotorState.IDLE;
-		}else if(motor_string.equals("up")) {
-			ms = MotorState.UP;
-		}else {
-			ms = MotorState.DOWN;
-		}
-		if(door_string.equals("op")) {
-			ds = DoorState.OPEN;
-		}else {
-			ds = DoorState.CLOSED;
-		}
-		if(moving_string.equals("T")) {
-			is_moving=true;
-		}else {
-			is_moving=false;
-		}
-		ElevatorData ed = new ElevatorData(id_int,floor_int,ds,ms,is_moving);
-		return ed;
-		
-	}
-
-	@Override
-	public void run() {
+		// floorsystem --> scheduler --> floorsystem
 		while (true) {
-			
-			//put scheduler in an idle state
-			state = SchedulerState.IDLE;
-			
-			if (pipe.isElevatorToScheduler()) {
-				//scheduler state receiving 
-				state = SchedulerState.RECEIVING;
-				handleElevatorEvent();
-			}
-			if (pipe.isFloorToScheduler()) {
-				//scheduler state receiving 
-				state = SchedulerState.RECEIVING;
-				handleFloorEvent(pipe.getGeneratedEvent());
-			}
 
-			
-			try {
-				Thread.sleep(250);
-			} catch (InterruptedException e) {e.printStackTrace();}
+			reply();
+
+		}
+
+	}
+
+	/**
+	 * elevatorsystem --> scheduler
+	 */
+	private void reply2() {
+
+		System.out.println("reply2()");
+		
+		this.state = SchedulerState.RECEIVING;
+
+		byte[] data = new byte[25];
+		elevatorPacket = new DatagramPacket(data, data.length);
+
+		try {
+			elevatorSocket.receive(elevatorPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		// PACKET INFORMATION
+		System.out.println("ElevatorSystem Packet received:");
+		System.out.println("From: " + elevatorPacket.getAddress());
+		System.out.println("Port #: " + elevatorPacket.getPort());
+		int len = elevatorPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.println("Containing: " + new String(data, 0, len));
+		System.out.println("Containing Bytes: " + Arrays.toString(data) + "\n");
+		// END PACKET INFORMATION
+
+		byte[] ackData;
+		// decode packet
+		if (data[0] == 2) {
+			// if elevator system send a request for move information
+			// check if there is new move commands
+			if (floorEventQueue.size() == 0) {
+				// if no new move commands, send empty reply
+				ackData = "no change".getBytes();
+			} else {
+				// if new move commands, remove them from queue and send them to elevator system
+				// ackData = FloorEvent.marshal(floorEventQueue.remove(0));
+				ackData = floorEventQueue.remove(0);
+			}
+		} else if (data[0] == 1) {
+			// if elevator system sent elevator state information, update elevator states
+			// and send acknowledgment
+			ackData = "ack".getBytes();
+			this.elevatorStates = data;
+		} else {
+			// if command is unknown, return unknown
+			ackData = "unknown".getBytes();
+		}
+
+		try {
+			ackPacket = new DatagramPacket(ackData, ackData.length, InetAddress.getLocalHost(),
+					elevatorPacket.getPort());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		// PACKET INFORMATION
+		System.out.println("Scheduler Sending ack packet:");
+		System.out.println("To ElevatorSystem: " + ackPacket.getAddress());
+		System.out.println("Destination port: " + ackPacket.getPort());
+		len = ackPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.println("Containing: " + new String(ackData, 0, len));
+		System.out.println("Containing Bytes: " + Arrays.toString(ackData) + "\n");
+		// END PACKET INFORMATION
+
+		
+		this.state = SchedulerState.SENDING;
+		
+		try {
+			elevatorSocket.send(ackPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
 		}
 		
+		this.state = SchedulerState.IDLE;
+
 	}
+
+	/**
+	 * floorsystem --> scheduler --> floorsystem
+	 */
+	private void reply() {
+
+		System.out.println("reply()");
+
+		this.state = SchedulerState.RECEIVING;
+		
+		byte data[] = new byte[256];
+		floorPacket = new DatagramPacket(data, data.length);
+
+		try {
+			floorSocket.receive(floorPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		// PACKET INFORMATION
+		System.out.println("FloorSystem Packet received:");
+		System.out.println("From: " + floorPacket.getAddress());
+		System.out.println("Port #: " + floorPacket.getPort());
+		int len = floorPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.println("Containing: " + new String(data, 0, len));
+		System.out.println("Containing Bytes: " + Arrays.toString(data) + "\n");
+		// END PACKET INFORMATION
+
+		// if DATA_REQUEST
+		byte[] ackData;
+		if (data[0] == 2) {
+			// if floor system is asking for elevator states to update lamps, send elevator
+			// states
+			ackData = elevatorStates;
+		} else {
+			// if floor system sent floor event information, reply with acknowledgment
+			ackData = "ack".getBytes();
+
+			// TODO schedule the event and notify and add to event queue
+			FloorEvent fe = FloorEvent.unmarshal(data);
+			System.out.println("Received floor event with state: " + fe);
+			// floorEventQueue.add(fe);
+
+			floorEventQueue.add(chooseElevator(elevatorStates, fe));
+		}
+
+		try {
+			ackPacket = new DatagramPacket(ackData, ackData.length, InetAddress.getLocalHost(), floorPacket.getPort());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		// PACKET INFORMATION
+		System.out.println("Scheduler Sending ack packet:");
+		System.out.println("To FloorSystem: " + ackPacket.getAddress());
+		System.out.println("Destination port: " + ackPacket.getPort());
+		len = ackPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.println("Containing: " + new String(ackData, 0, len));
+		System.out.println("Containing Bytes: " + Arrays.toString(ackData) + "\n");
+		// END PACKET INFORMATION
+
+		this.state = SchedulerState.SENDING;
+		
+		try {
+			floorSocket.send(ackPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		this.state = SchedulerState.IDLE;
+
+	}
+
+	/*
+	 * parameters: byte array of elevator state data, floor data of user waiting on
+	 * elevator return: btye array [1, elevator#, pickupFloor, destinationFloorNum]
+	 * 1: send_request
+	 */
+	public byte[] chooseElevator(byte[] elevatorStateData, FloorEvent floorEvent) {
+		// elevatorStateData = [1, 0, 1, 0, 0, 1, 1, 0, 0, 2, 1, 0, 0, 3, 1, 0, 0]
+		// first bit is 1 denoting that it is a send_request, then it repeats every 4
+		// bits
+		// 0, 1, 0, 0 --> elevatorID = 0, curFloor = 1, motorState = IDLE, 0 to separate
+		// elevators
+
+		// algorithm to find which elevator to send to user
+		// find if same floor, send elevator that is on same floor
+		// find closest same direction, send closest elevator
+		// find if idle, send first idle elevator
+
+		byte[] chosenElevator = new byte[4];
+		boolean foundElevator = false;
+
+		// same floor, send first elevator that loop finds (todo: balance # of users per
+		// elevator)
+		// byte numUsersLeast = floorEvent.getTotalUsers(); // first entry of how many
+		// users are on elevator
+		// byte leastUsersElevator;
+
+		for (byte i = 2; i < elevatorStateData.length; i += 4) { // loop through all elevators
+			if (elevatorStateData[i] == floorEvent.getFloorNumber()) {
+				chosenElevator[0] = 1;
+				chosenElevator[1] = (byte) elevatorStateData[i - 1];
+				chosenElevator[2] = (byte) floorEvent.getFloorNumber();
+				chosenElevator[3] = (byte) floorEvent.getDestinationFloor();
+				foundElevator = true;
+			}
+			if (foundElevator == true) {
+				return chosenElevator; // [1, elevator#, pickupFloor, destinationFloorNum]
+			}
+
+		}
+
+		// find an elevator in the same direction
+		if (foundElevator == false) {
+			byte numFloorsCloser = (byte) Math.abs(floorEvent.getFloorNumber() - elevatorStateData[2]); // #floor
+																										// difference of
+																										// first entry
+			// byte closestElevator;
+			byte direction;
+
+			for (byte i = 4; i < elevatorStateData.length; i += 4) { // loop through all elevators
+				floorEvent.getDirection();
+				if (Direction.parseDirection("up") == floorEvent.getDirection()) {
+					direction = 2; // direction UP
+				} else {
+					floorEvent.getDirection();
+					if (Direction.parseDirection("down") == floorEvent.getDirection()) {
+						direction = 3; // direction DOWN
+					} else {
+						direction = -1; // direction INVALID
+					}
+				}
+				if (elevatorStateData[i] == direction) {
+					if (numFloorsCloser > Math.abs(floorEvent.getFloorNumber() - elevatorStateData[i - 1])) {
+						numFloorsCloser = (byte) Math.abs(floorEvent.getFloorNumber() - elevatorStateData[i - 1]);
+						// closestElevator = i;
+						chosenElevator[0] = 1;
+						chosenElevator[1] = (byte) elevatorStateData[i - 3];
+						chosenElevator[2] = (byte) floorEvent.getFloorNumber();
+						chosenElevator[3] = (byte) floorEvent.getDestinationFloor();
+					}
+					foundElevator = true;
+				}
+			}
+
+			if (foundElevator == true) {
+				return chosenElevator; // [1, elevator#, pickupFloor, destinationFloorNum]
+			}
+		}
+
+		// find any idle elevator
+		if (foundElevator == false) {
+			for (byte i = 3; i < elevatorStateData.length; i += 4) { // loop through all elevators
+				if (elevatorStateData[i] == 1) {
+					chosenElevator[0] = 1;
+					chosenElevator[1] = (byte) elevatorStateData[i - 2];
+					chosenElevator[2] = (byte) floorEvent.getFloorNumber();
+					chosenElevator[3] = (byte) floorEvent.getDestinationFloor();
+					foundElevator = true;
+					break;
+				}
+
+			}
+
+			if (foundElevator == true) {
+				return chosenElevator; // [1, elevator#, pickupFloor, destinationFloorNum]
+			}
+		}
+
+		return chosenElevator; // error, return empty, no elevator can take user
+
+	}
+	
+	public SchedulerState getState() {return state;}
+
+	public static void main(String[] args) {
+		new Scheduler();
+	}
+
+
 
 }

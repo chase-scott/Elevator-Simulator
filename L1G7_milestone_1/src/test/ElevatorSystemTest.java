@@ -5,15 +5,19 @@ package test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.HashMap;
+
 import org.junit.jupiter.api.Test;
 
 import elevator.Elevator;
 import event.EventFile;
 import event.FloorEvent;
 import state.Direction;
+import state.DoorState;
+import state.MotorState;
 import system.ElevatorSystem;
 import system.FloorSystem;
-import system.Pipe;
+import system.Observer;
 
 /**
  * @author Colin
@@ -23,57 +27,34 @@ class ElevatorSystemTest {
 
 	@Test
 	void elevatorSystemTest() {
-		Pipe buffer = new Pipe();
-		EventFile file = new EventFile();
-		ElevatorSystem es = new ElevatorSystem(1, 11, buffer);
-		Thread elevatorSubsystem = new Thread(es, "Floor subsystem");
-		assertEquals(buffer.isElevatorToScheduler(),false);
-		assertEquals(buffer.isFloorToScheduler(),false);
-		assertEquals(buffer.isSchedulerToElevator(),false);
-		assertEquals(buffer.isSchedulerToFloor(),false);
-		elevatorSubsystem.start();
-		event.FloorEvent fe = new event.FloorEvent("15:20:43.997771100", 4, Direction.UP, 7);
-		buffer.sendToElevator(fe);
-		assertEquals(buffer.isElevatorToScheduler(),false);
-		assertEquals(buffer.isFloorToScheduler(),false);
-		assertEquals(buffer.isSchedulerToElevator(),true);
-		assertEquals(buffer.isSchedulerToFloor(),false);
-
-	}
-	@Test
-	void decodePacketDataTest() {
-		EventFile file = new EventFile();
-		FloorEvent[] events = EventFile.readTextFile(file.getFile());
-		Pipe buffer = new Pipe();
-		ElevatorSystem es = new ElevatorSystem(1, 11, buffer);
-		FloorSystem fs = new FloorSystem(1, 11, buffer, file);
-		byte[] data = fs.buildPacketData(events[0]);
-		for(int i = 0;i<data.length;i++) {
-			System.out.print(data[i] +" ");
-		}
-		System.out.print("\n");
-		FloorEvent fe = es.decodePacketData(data);
-		System.out.println(fe.getTime());
-		System.out.println(fe.getFloorNumber());
-		System.out.println(fe.getDirection());
-		System.out.println(fe.getDestinationFloor());
-
+		Thread t = new Thread();
+		ElevatorSystem es = new ElevatorSystem("THIS IS A TEST ELEVATOR SYSTEM");
+		HashMap<Integer, Observer> elevators = es.getElevators();
+		
+		Elevator e1;
+		Elevator e2;
+		Elevator e3;
+		Elevator e4;
+		e1 = elevators.get(1).getElevator();
+		e2 = elevators.get(2).getElevator();
+		e3 = elevators.get(3).getElevator();
+		e4 = elevators.get(4).getElevator();
+		assertEquals(e1.getCurFloor(),1);
+		assertEquals(e2.getCurFloor(),1);
+		assertEquals(e3.getCurFloor(),1);
+		assertEquals(e4.getCurFloor(),1);
+		
+		assertEquals(e1.getMotor(),MotorState.IDLE);
+		assertEquals(e2.getMotor(),MotorState.IDLE);
+		assertEquals(e3.getMotor(),MotorState.IDLE);
+		assertEquals(e4.getMotor(),MotorState.IDLE);
+		
+		assertEquals(e1.getDoor(),DoorState.CLOSED);
+		assertEquals(e2.getDoor(),DoorState.CLOSED);
+		assertEquals(e3.getDoor(),DoorState.CLOSED);
+		assertEquals(e4.getDoor(),DoorState.CLOSED);
+		
 	}
 	
-	@Test
-	void buildPacketDataTest() {
-		Pipe buffer = new Pipe();
-		ElevatorSystem es = new ElevatorSystem(1, 11, buffer);
-		Elevator e = new Elevator(1,11,1,1);
-
-		byte[] data = es.buildPacketData(e);
-		for(int i = 0;i<data.length;i++) {
-			System.out.print(data[i] + " ");
-		}
-
-		
-
-		
-	}
 
 }
