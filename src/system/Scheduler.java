@@ -61,6 +61,24 @@ public class Scheduler {
 		}
 
 	}
+	
+	public Scheduler(String test) {
+		System.out.println(test);
+		floorEventQueue = new ArrayList<>();
+
+		try {
+			floorSocket = new DatagramSocket(FLOOR_PORT);
+			elevatorSocket = new DatagramSocket(ELEVATOR_PORT);
+		} catch (SocketException se) {
+			se.printStackTrace();
+			System.exit(1);
+		}
+		
+		this.state = SchedulerState.IDLE;
+		
+		reply();
+		
+	}
 
 	/**
 	 * elevatorsystem --> scheduler
@@ -324,6 +342,8 @@ public class Scheduler {
 		return chosenElevator; // error, return empty, no elevator can take user
 
 	}
+	
+	public ArrayList<byte[]> getFloorEventQueue(){ return floorEventQueue;}
 	
 	public SchedulerState getState() {return state;}
 
