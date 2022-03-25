@@ -63,6 +63,7 @@ public class Scheduler {
 	}
 	
 	public Scheduler(String test) {
+		
 		System.out.println(test);
 		floorEventQueue = new ArrayList<>();
 
@@ -75,8 +76,11 @@ public class Scheduler {
 		}
 		
 		this.state = SchedulerState.IDLE;
-		
-		reply();
+		if(test.equals("ReplyTest")) {
+			reply();			
+		}else if(test.equals("Reply2Test")) {
+			reply2();
+		}
 		
 	}
 
@@ -346,6 +350,15 @@ public class Scheduler {
 	public ArrayList<byte[]> getFloorEventQueue(){ return floorEventQueue;}
 	
 	public SchedulerState getState() {return state;}
+	
+	public void closeSockets() {
+		floorSocket.close();
+		elevatorSocket.close();
+	}
+	
+	public DatagramPacket getElevatorPacket() {
+		return elevatorPacket;
+	}
 
 	public static void main(String[] args) {
 		new Scheduler();
