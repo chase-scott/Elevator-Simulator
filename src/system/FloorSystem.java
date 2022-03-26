@@ -85,9 +85,18 @@ public class FloorSystem {
 		} catch (SocketException se) {
 			se.printStackTrace();
 		}
+		byte[] return_data = {};
 
-			
+		if(test.equals("SendTest")) {
+			rpc_send(DATA_REQUEST, return_data);
 		}
+
+		/*
+		 * if(new floor event) { rpc_send(FLOOR_EVENT, return_data); }
+		 */
+
+
+	}
 
 	private void rpc_send(byte[] out, byte[] in) {
 
@@ -161,9 +170,11 @@ public class FloorSystem {
 	}
 	public ArrayList<Observer> getFloors(){
 		return floorObservers;
+	}	
+	
+	public DatagramPacket getReceivePacket() {
+		return receivePacket;
 	}
-	
-	
 	
 	public static void main(String[] args) {
 		
