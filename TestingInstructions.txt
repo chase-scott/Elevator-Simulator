@@ -2,9 +2,8 @@ Testing Instructions
 
 Run Configurations...
 Junit -> New Configuration
-Project: L1G7_milestone_1
-Test runner: JUnit 5
-Test class: system.SystemTest
-Test method: systemTest
-
+Name -> TestAll
+Select "Run all tests in the selected project, package or source folder"
+Select "SYSC3303Group7"
+Test Runner -> JUnit 5
 Apply -> Run 
