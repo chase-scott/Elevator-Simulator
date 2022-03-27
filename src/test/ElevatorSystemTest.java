@@ -18,6 +18,7 @@ import state.MotorState;
 import system.ElevatorSystem;
 import system.FloorSystem;
 import system.Observer;
+import system.Scheduler;
 
 /**
  * @author Colin
@@ -30,7 +31,6 @@ class ElevatorSystemTest {
 		Thread t = new Thread();
 		ElevatorSystem es = new ElevatorSystem("THIS IS A TEST ELEVATOR SYSTEM");
 		HashMap<Integer, Observer> elevators = es.getElevators();
-		
 		Elevator e1;
 		Elevator e2;
 		Elevator e3;
@@ -53,7 +53,28 @@ class ElevatorSystemTest {
 		assertEquals(e2.getDoor(),DoorState.CLOSED);
 		assertEquals(e3.getDoor(),DoorState.CLOSED);
 		assertEquals(e4.getDoor(),DoorState.CLOSED);
+		es.closeSocket();
 		
+	}
+	
+	@Test
+	void elevatorSystemSendTest() {
+		new Thread(new Runnable() {
+			public void run() {
+				Scheduler s = new Scheduler("Reply2Test");
+				s.closeSockets();
+			}
+
+		}).start();
+
+		ElevatorSystem es = new ElevatorSystem("SendTest");
+		System.out.println(es.getReceivePacket().getData());	
+		assertEquals(es.getReceivePacket().getData()[0],97);
+		assertEquals(es.getReceivePacket().getData()[1],99);
+		assertEquals(es.getReceivePacket().getData()[2],107);
+		assertEquals(es.getReceivePacket().getData()[3],0);
+		es.closeSocket();
+	
 	}
 	
 

@@ -44,6 +44,7 @@ class FloorSystemTest {
 		new Thread(new Runnable() {
 			public void run() {
 				Scheduler s = new Scheduler("ReplyTest");
+				s.closeSockets();
 			}
 
 		}).start();
@@ -57,6 +58,7 @@ class FloorSystemTest {
 		assertEquals(fs.getReceivePacket().getData()[6],1);
 		assertEquals(fs.getReceivePacket().getData()[7],1);
 		assertEquals(fs.getReceivePacket().getData()[8],0);
+		
 		
 
 	}

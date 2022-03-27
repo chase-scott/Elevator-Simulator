@@ -34,10 +34,6 @@ public class ElevatorSystem {
 			elevators.put(i, e);
 			new Thread(e, "Elevator " + i).start();;
 		}
-		
-		
-		
-		
 
 		try {
 			sendReceiveSocket = new DatagramSocket();
@@ -85,6 +81,11 @@ public class ElevatorSystem {
 
 		} catch (SocketException se) {
 			se.printStackTrace();
+		}
+		
+		if(test.equals("SendTest")) {
+			byte[] return_data = {};
+			rpc_send(this.buildStateData(), return_data);
 		}
 
 	}
@@ -199,6 +200,14 @@ public class ElevatorSystem {
 
 		return req;
 
+	}
+	
+	public DatagramPacket getReceivePacket() {
+		return receivePacket;
+	}
+	
+	public void closeSocket() {
+		sendReceiveSocket.close();
 	}
 
 	public HashMap<Integer, Observer> getElevators(){
