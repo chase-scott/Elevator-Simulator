@@ -4,19 +4,12 @@
 package test;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.HashMap;
-
 import org.junit.jupiter.api.Test;
-
 import elevator.Elevator;
-import event.EventFile;
-import event.FloorEvent;
-import state.Direction;
 import state.DoorState;
 import state.MotorState;
 import system.ElevatorSystem;
-import system.FloorSystem;
 import system.Observer;
 import system.Scheduler;
 
@@ -28,17 +21,17 @@ class ElevatorSystemTest {
 
 	@Test
 	void elevatorSystemTest() {
-		Thread t = new Thread();
+
 		ElevatorSystem es = new ElevatorSystem("THIS IS A TEST ELEVATOR SYSTEM");
 		HashMap<Integer, Observer> elevators = es.getElevators();
 		Elevator e1;
 		Elevator e2;
 		Elevator e3;
 		Elevator e4;
-		e1 = elevators.get(1).getElevator();
-		e2 = elevators.get(2).getElevator();
-		e3 = elevators.get(3).getElevator();
-		e4 = elevators.get(4).getElevator();
+		e1 = (Elevator) elevators.get(1);
+		e2 = (Elevator) elevators.get(2);
+		e3 = (Elevator) elevators.get(3);
+		e4 = (Elevator) elevators.get(4);
 		assertEquals(e1.getCurFloor(),1);
 		assertEquals(e2.getCurFloor(),1);
 		assertEquals(e3.getCurFloor(),1);
@@ -61,13 +54,13 @@ class ElevatorSystemTest {
 	void elevatorSystemSendTest() {
 		new Thread(new Runnable() {
 			public void run() {
-				Scheduler s = new Scheduler("Reply2Test");
+				Scheduler s = new Scheduler("ElevatorReplyTest");
 				s.closeSockets();
 			}
 
 		}).start();
 
-		ElevatorSystem es = new ElevatorSystem("SendTest");
+		ElevatorSystem es = new ElevatorSystem("ElevatorSystemSendTest");
 		System.out.println(es.getReceivePacket().getData());	
 		assertEquals(es.getReceivePacket().getData()[0],97);
 		assertEquals(es.getReceivePacket().getData()[1],99);

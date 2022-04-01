@@ -1,7 +1,6 @@
 package test;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -13,15 +12,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-
 import org.junit.jupiter.api.Test;
-
 import elevator.Elevator;
-import event.FloorEvent;
-import event.EventFile;
-import state.Direction;
 import state.SchedulerState;
-import system.ElevatorSystem;
 import system.FloorSystem;
 import system.Observer;
 import system.Scheduler;
@@ -126,6 +119,7 @@ class SchedulerTest {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
+				@SuppressWarnings("unused")
 				FloorSystem fs = new FloorSystem(1,22,"SendTest");
 			}
 		}).start();
@@ -145,58 +139,6 @@ class SchedulerTest {
 		assertEquals(s.getFloorPacket().getData()[10],101);
 		assertEquals(s.getFloorPacket().getData()[11],110);
 		s.closeSockets();
-	}
-	
-	@Test
-	void floorErrorTest() {
-		new Thread(new Runnable() {
-			public void run() {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				FloorSystem fs = new FloorSystem(1,22,"FloorErrorTest");
-			}
-		}).start();
-		
-		Scheduler s = new Scheduler("FloorReplyTest");
-		ArrayList<byte[]> queue = s.getFloorEventQueue();
-		byte[] event = queue.get(0);
-		for (byte b : event) {
-			System.out.println(b + " ");
-		}
-		assertEquals(SchedulerState.IDLE,s.getState());
-		assertEquals(event[0],16); //Error data constant
-		assertEquals(event[1],3); //Elevator ID
-		assertEquals(event[2],-69); //Error type
-
-
-	}
-	
-	@Test
-	void doorErrorTest() {
-		new Thread(new Runnable() {
-			public void run() {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				FloorSystem fs = new FloorSystem(1,22,"DoorErrorTest");
-			}
-		}).start();
-		
-		Scheduler s = new Scheduler("FloorReplyTest");
-		ArrayList<byte[]> queue = s.getFloorEventQueue();
-		byte[] event = queue.get(0);
-		for (byte b : event) {
-			System.out.println(b + " ");
-		}
-		assertEquals(SchedulerState.IDLE,s.getState());
-		assertEquals(event[0],16); //Error data constant
-		assertEquals(event[1],1); //Elevator ID
-		assertEquals(event[2],-23); //Error type
 	}
 	
 }

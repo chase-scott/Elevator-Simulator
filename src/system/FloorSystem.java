@@ -6,14 +6,15 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 
+import event.Event;
+import event.EventFile;
 import event.FloorEvent;
 import floor.Floor;
+import util.Constants;
+import util.Timer;
 
 public class FloorSystem {
 
@@ -21,18 +22,22 @@ public class FloorSystem {
 	DatagramSocket sendReceiveSocket;
 	
 	private ArrayList<Observer> floorObservers;
+	private Event[] events; //array of events from the event file
 
 
-	private static byte[] DATA_REQUEST = { 2 };
+	private static byte[] DATA_REQUEST = { Constants.DATA_REQUEST };
 	private final int SEND_PORT = 23; // the port to send the packets
 
-	public FloorSystem(int MIN_FLOOR, int MAX_FLOOR) {
+	public FloorSystem() {
 		
 		//add floorObservers for each floor
 		floorObservers = new ArrayList<>();
-		for (int i = MIN_FLOOR; i <= MAX_FLOOR; i++) {
-			floorObservers.add(new Floor(i, i == MIN_FLOOR, i == MAX_FLOOR));
+		for (int i = Constants.MIN_FLOOR; i <= Constants.MAX_FLOOR; i++) {
+			floorObservers.add(new Floor(i, i == Constants.MIN_FLOOR, i == Constants.MAX_FLOOR));
 		}
+		
+		//read events from event file
+		events = EventFile.readTextFile();
 		
 
 		// open socket for sending and receiving data
@@ -42,26 +47,23 @@ public class FloorSystem {
 			se.printStackTrace();
 		}
 
-		byte[] return_data = {};
 
+		int i = 0;
 		// continuously ask for elevator states
 		while (true) {
 
+			//send new floor event after delay
+			if(i < events.length)
+				send(FloorEvent.marshal(events[i]));
+			i++;
 			
-			rpc_send(FloorEvent.marshal(new FloorEvent()), return_data);
-			
-
-			/*
-			 * if(new floor event) { rpc_send(FLOOR_EVENT, return_data); }
-			 */
-
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(Timer.DEFAULT);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 
-			rpc_send(DATA_REQUEST, return_data);
+			send(DATA_REQUEST);
 			
 		}
 
@@ -74,9 +76,12 @@ public class FloorSystem {
 		System.out.println(test);
 		//add floorObservers for each floor
 		floorObservers = new ArrayList<>();
-		for (int i = MIN_FLOOR; i <= MAX_FLOOR; i++) {
-			floorObservers.add(new Floor(i, i == MIN_FLOOR, i == MAX_FLOOR));
+		for (int i = Constants.MIN_FLOOR; i <= Constants.MAX_FLOOR; i++) {
+			floorObservers.add(new Floor(i, i == Constants.MIN_FLOOR, i == Constants.MAX_FLOOR));
 		}
+		
+		//read events from event file
+		events = EventFile.readTextFile();
 		
 
 		// open socket for sending and receiving data
@@ -85,26 +90,11 @@ public class FloorSystem {
 		} catch (SocketException se) {
 			se.printStackTrace();
 		}
-		byte[] return_data = {};
 
 		if(test.equals("SendTest")) {
-			rpc_send(DATA_REQUEST, return_data);
+			send(FloorEvent.marshal(events[0]));
+
 		}
-
-		/*
-		 * if(new floor event) { rpc_send(FLOOR_EVENT, return_data); }
-		 */
-
-
-	}
-
-	private void rpc_send(byte[] out, byte[] in) {
-
-		System.out.println(new String(in, 0, in.length));
-
-		in = send(out);
-
-		System.out.println(new String(in, 0, in.length));
 
 	}
 
@@ -123,14 +113,7 @@ public class FloorSystem {
 		}
 
 		// MESSAGE INFORMATION
-		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
-				+ "FloorSystem: Sending packet:");
-		System.out.println("To host: " + sendPacket.getAddress());
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.println("Containing: " + new String(sendPacket.getData(), 0, len));
-		System.out.println("Containing Bytes: " + Arrays.toString(sendPacket.getData()));
+		System.out.println(Timer.formatTime() + " [FloorSystem] Sending packet" + printPacket(sendPacket));
 		// MESSAGE INFORMATION
 
 		// try to send message over the socket at port 23
@@ -139,9 +122,6 @@ public class FloorSystem {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
-				+ "FloorSystem: Packet sent.\n");
 
 		// Wait on acknowledgment
 		byte[] ack = new byte[25];
@@ -154,20 +134,64 @@ public class FloorSystem {
 
 		}
 		
-		if(ack[0] == 1) this.updateObservers(ack);
+		if(ack[0] == Constants.ELEVATOR_INFO) this.updateObservers(ack);
 
-		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
-				+ "FloorSystem: returnPacket received: " + new String(Arrays.toString(ack)) + "\n");
+		System.out.println(Timer.formatTime() + " [FloorSystem] Packet received" + printPacket(receivePacket));
 
 		return ack;
 
 	}
 	
+	/**
+	 * Updates each floor's lamps for the given elevator state information.
+	 * 
+	 * @param data	byte[], the data
+	 */
 	private void updateObservers(byte[] data) {
-		System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
-				+ "Updating lamps...");
+		//System.out.println("Updating lamps...");
 		floorObservers.forEach(e -> e.update(data));
 	}
+	
+	/**
+	 * Returns a string containing all of the packet information
+	 * 
+	 * @param packet DatagramPacket, the packet
+	 * @return String, the info
+	 */
+	private String printPacket(DatagramPacket packet) {
+
+		StringBuilder sb = new StringBuilder();
+
+		byte[] data = Arrays.copyOf(packet.getData(), packet.getLength()); // truncate packet length
+
+		if (Constants.DEBUG) {
+			sb.append(":\n");
+			// DEBUG INFORMATIONM
+			sb.append("\tTo host: " + packet.getAddress() + "\n");
+			sb.append("\tDestination host port: " + packet.getPort() + "\n");
+			int len = packet.getLength();
+			sb.append("\tLength: " + len + "\n");
+			sb.append("\tContaining: " + new String(data, 0, len) + "\n");
+			sb.append("\tContaining Bytes: " + Arrays.toString(data) + "\n");
+
+		} else {
+			sb.append(".\n");
+			
+			// IF ack data is received, let the user know
+			if (Arrays.equals(data, Constants.ACK_DATA)) {
+				sb.append("\tAcknowledgedment.\n");
+			}
+			
+			if(data[0] == Constants.ELEVATOR_INFO) {
+				sb.append("\tReceived elevator states.\n");
+			}
+			
+			
+		}
+
+		return sb.toString();
+	}
+	
 	public ArrayList<Observer> getFloors(){
 		return floorObservers;
 	}	
@@ -178,7 +202,7 @@ public class FloorSystem {
 	
 	public static void main(String[] args) {
 		
-		new FloorSystem(1, 22);
+		new FloorSystem();
+	
 	}
-
 }

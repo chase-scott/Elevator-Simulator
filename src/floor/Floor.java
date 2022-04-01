@@ -2,7 +2,6 @@ package floor;
 
 import java.util.ArrayList;
 
-import elevator.Elevator;
 import state.Direction;
 import system.Observer;
 
@@ -37,18 +36,6 @@ public class Floor implements Observer {
 	public void update(byte[] data) {
 		//TODO turn on and off lamps
 	
-	}
-
-	@Override
-	public Elevator getElevator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Floor getFloor() {
-		// TODO Auto-generated method stub
-		return this;
 	}
 	
 	
