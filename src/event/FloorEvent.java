@@ -9,8 +9,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.ParseException;
-
 import state.Direction;
+import util.Constants;
 
 /**
  * FloorEvent class
@@ -18,66 +18,86 @@ import state.Direction;
  * @author Chase Scott - 101092194
  */
 public class FloorEvent implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
+
 	private String time;
 	private int floorNum;
 	private Direction direction;
 	private int destinationFloorNum;
-	
+	private int errorType; // the type of error
+
 	/**
-	 * Creates a random FloorEvent and writes it to the EventFile
+	 * Creates a random FloorEvent
 	 */
 	public FloorEvent() {
-		int MAXFLOOR = 11;
-		int MINFLOOR = 1;
-		
-		this.time = formatTime();
-		this.floorNum = ((int) (Math.random()*(MAXFLOOR - MINFLOOR))) + MINFLOOR;
-		
+
+		this.time = "00:00:000";
+
+		int MAXFLOOR = Constants.MAX_FLOOR;
+		int MINFLOOR = Constants.MIN_FLOOR;
+
+		this.errorType = Constants.NO_ERROR;
+
+		this.floorNum = ((int) (Math.random() * (MAXFLOOR - MINFLOOR))) + MINFLOOR;
+
 		do {
-			this.destinationFloorNum = ((int) (Math.random()*(MAXFLOOR - MINFLOOR))) + MINFLOOR;
-		} while(this.destinationFloorNum == this.floorNum);
-		
-		
-		if(this.floorNum > this.destinationFloorNum) {
+			this.destinationFloorNum = ((int) (Math.random() * (MAXFLOOR - MINFLOOR))) + MINFLOOR;
+		} while (this.destinationFloorNum == this.floorNum);
+
+		if (this.floorNum > this.destinationFloorNum) {
 			this.direction = Direction.DOWN;
 		} else {
 			this.direction = Direction.UP;
 		}
-		
+
 	}
-	
+
 	/**
 	 * Constructor for a specific FloorEvent
 	 * 
-	 * @param time				String, time
-	 * @param floorNumber		int, floor number
-	 * @param direction			Direction, direction of button press
-	 * @param destinationFloor	int, destination floor
+	 * @param time             String, time
+	 * @param floorNumber      int, floor number
+	 * @param direction        Direction, direction of button press
+	 * @param destinationFloor int, destination floor
 	 */
-	public FloorEvent(String time, int floorNumber, Direction direction, int destinationFloor) {
+	public FloorEvent(String time, int floorNumber, Direction direction, int destinationFloor, int errorType) {
 		this.time = time;
 		this.floorNum = floorNumber;
 		this.direction = direction;
 		this.destinationFloorNum = destinationFloor;
+		this.errorType = errorType;
 	}
-	
+
 	/**
 	 * Reads a string for EventFile and creates a FloorEvent object
 	 * 
-	 * @param eventString	String, the event string
+	 * @param eventString String, the event string
 	 * @throws ParseException if parsing of string fails
 	 */
 	public FloorEvent(String eventString) throws ParseException {
+
 		String[] splitString = eventString.split(" ");
-		if (splitString.length == 4) {
-			time = splitString[0];
+		if (splitString.length == 4 || splitString.length == 5) {
+			
+			this.time = splitString[0];
+
 			direction = Direction.parseDirection(splitString[2]);
 
 			try {
 				floorNum = Integer.parseInt(splitString[1]);
 				destinationFloorNum = Integer.parseInt(splitString[3]);
+
+				try {
+					if (splitString[4].equals("FLOOR_ERROR")) {
+						errorType = Constants.FLOOR_ERROR;
+					} else if (splitString[4].equals("DOOR_ERROR")) {
+						errorType = Constants.DOOR_ERROR;
+					}
+				} catch (IndexOutOfBoundsException e1) {
+					this.errorType = Constants.NO_ERROR;
+				}
+
 			} catch (NumberFormatException e) {
 				throw new ParseException("EventFile parsing failed", 0);
 			}
@@ -85,55 +105,44 @@ public class FloorEvent implements Serializable {
 		} else {
 			throw new ParseException("EventFile parsing failed", 0);
 		}
-		
+
 	}
 
-	public String getTime() { return this.time; }
-	
-	public int getFloorNumber() { return this.floorNum; }
-	
-	public Direction getDirection() { return this.direction; }
-	
-	public int getDestinationFloor() {return this.destinationFloorNum;}
-	
 	/**
-	 * Builds the floor event packet
+	 * Marshal this event to a byte array.
 	 * 
-	 * @param fe FloorEvent, the event to be marshaled
-	 * @return byte[], the packet data
+	 * @param e
+	 * @return
 	 */
-	public static byte[] marshal(FloorEvent fe) {
-		
+	public static byte[] marshal(FloorEvent e) {
 		// Getting byte arrays of FloorEvent attributes
 		try {
 			ByteArrayOutputStream baoStream = new ByteArrayOutputStream();
 			ObjectOutputStream ooStream = new ObjectOutputStream(new BufferedOutputStream(baoStream));
 			ooStream.flush();
-			ooStream.writeObject(fe);
+			ooStream.writeObject(e);
 			ooStream.flush();
-			
-			System.out.println(fe.toString());
-			
+
 			return baoStream.toByteArray();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
+
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
-		
+
 		return null;
-		
+
 	}
-	
+
 	/**
-	 * Unmarshals the data if it is a floor event, otherwise throws exception
+	 * Unmarshals the data if it is a event, otherwise throws exception
 	 * 
-	 * @param data	byte[], the data to unmarshal 
-	 * @return		FloorEvent, the unmarshalled floor event
+	 * @param data byte[], the data to unmarshal
+	 * @return FloorEvent, the unmarshalled floor event
 	 */
 	public static FloorEvent unmarshal(byte[] data) {
-		
+
 		// decode floor event
-		FloorEvent floorEvent = null;
+		FloorEvent event = null;
 		try {
 			// Retrieve the ElevatorData object from the receive packet
 			ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
@@ -142,35 +151,45 @@ public class FloorEvent implements Serializable {
 			Object o = is.readObject();
 			is.close();
 
-			floorEvent = (FloorEvent) o;
+			event = (FloorEvent) o;
 		} catch (IOException | ClassNotFoundException e) {
 			System.err.println("Invalid packet recieved");
 			e.printStackTrace();
 		}
+
+		return event;
+	}
+
+	/**
+	 * Return the time delay for this event in Ms
+	 * 
+	 * @return
+	 */
+	public long getTime() {
+		String[] timeSplit = time.split(":");
 		
-		return floorEvent;
-		
+		return Integer.valueOf(timeSplit[0])*60000 + Integer.valueOf(timeSplit[1])*1000 + Integer.valueOf(timeSplit[2]);
 	}
 	
-	/**
-	 * Format the time
-	 * 
-	 * @return	String, the time
-	 */
-	private String formatTime() {
-        String[] s = java.time.LocalTime.now().toString().split(":");
-        String t = Integer.parseInt(s[0]) >= 12 ? "PM":"AM";
-        return (Integer.parseInt(s[0]) >= 12 ? Integer.parseInt(s[0]) - 12 : s[0]) + ":" + s[1] + ":" + Math.round(Float.parseFloat(s[2])) + " " + t;
-    }
-	
-	
+	public int getFloorNumber() {
+		return this.floorNum;
+	}
+
+	public Direction getDirection() {
+		return this.direction;
+	}
+
+	public int getDestinationFloor() {
+		return this.destinationFloorNum;
+	}
+
+	public int getErrorType() {
+		return errorType;
+	}
+
 	@Override
 	public String toString() {
-		String str = time + " " + floorNum + " " + direction + " " + destinationFloorNum;
-		return str;
+		return floorNum + " " + direction + " " + destinationFloorNum + " " + errorType;
 	}
-	
-	
-	
 
 }

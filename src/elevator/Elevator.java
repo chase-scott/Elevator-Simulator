@@ -1,31 +1,57 @@
 package elevator;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-
-import floor.Floor;
-import state.Direction;
+import GUI.IView;
 import state.DoorState;
 import state.MotorState;
 import system.Observer;
+import util.Constants;
+import util.Timer;
 
+/**
+ * Elevator class
+ * 
+ * @author Chase Scott - 101092194
+ */
 public class Elevator implements Observer, Runnable {
 
+	
+	private List<IView> views; // the views for this elevator
 	private List<ElevatorButton> buttons;
-	private MotorState motor;
+	
+	private MotorState motor; 
 	private DoorState door;
 	private int curFloor;
-    private volatile boolean exit = false;
+	
+	private boolean active; // if this elevator is active
+	private int errorCode; // no current error code if -1
 
+	//queue for floors going up
+	private List<Byte> upfloorQueue;
+	private boolean handlingUp;
 
-	private LinkedList<Integer> floorQueue;
+	//queue for floors going down
+	private List<Byte> downfloorQueue;
+	private boolean handlingDown;
 
 	public Elevator(int minFloor, int maxFloor) {
+
+		this.views = new ArrayList<>();
+
+		this.active = true;
+
+		this.errorCode = Constants.NO_ERROR;
+
 		this.motor = MotorState.IDLE;
 		this.door = DoorState.CLOSED;
 
-		this.floorQueue = new LinkedList<>();
+		this.upfloorQueue = new LinkedList<>();
+		this.handlingUp = false;
+		this.downfloorQueue = new LinkedList<>();
+		this.handlingDown = false;
 
 		this.curFloor = minFloor;
 
@@ -33,6 +59,240 @@ public class Elevator implements Observer, Runnable {
 		for (int i = minFloor; i < maxFloor; i++) {
 			buttons.add(new ElevatorButton(i));
 		}
+	}
+
+	/**
+	 * updates the elevator's floor queues
+	 */
+	@Override
+	public void notify(byte[] data) {
+
+		if (data[0] == Constants.MOVE_DATA) {
+
+			if (data[3] > data[2]) {
+
+				if (!upfloorQueue.contains( data[2])) {
+
+					upfloorQueue.add( data[2]);
+
+				}
+				if (!upfloorQueue.contains( data[3])) {
+
+					upfloorQueue.add( data[3]);
+
+				}
+
+				upfloorQueue.sort(Comparator.naturalOrder());
+
+			} else if (data[2] > data[3]) {
+
+				if (!downfloorQueue.contains(data[2])) {
+
+					downfloorQueue.add( data[2]);
+
+				}
+				if (!downfloorQueue.contains( data[3])) {
+
+					downfloorQueue.add( data[3]);
+
+				}
+
+				downfloorQueue.sort(Comparator.reverseOrder());
+			}
+
+			updateViews("Pickup at floor: " + data[2] + ". Requesting floor: " + data[3] + ". Error type: "
+					+ (data[4] == -1 ? "none" : data[4]) + ".\n");
+
+			// show elevator floor queues
+			// if (Constants.DEBUG) {
+			//System.out.println("\n-----FLOOR QUEUE for elevator " + data[1] + "-----\nup:");
+			//upfloorQueue.forEach(e -> System.out.print(e + " "));
+			//System.out.println("\n-----------------------\ndown:");
+			//downfloorQueue.forEach(e -> System.out.print(e + " "));
+			//System.out.println("\n-----------------------\n");
+			// }
+
+		}
+
+		// TODO make the events in a list so this can be handled dynamically
+		switch (data[4]) {
+		case Constants.DOOR_ERROR:
+			this.errorCode = Constants.DOOR_ERROR;
+			break;
+		case Constants.FLOOR_ERROR:
+			this.errorCode = Constants.FLOOR_ERROR;
+			break;
+		default:
+			break;
+		}
+
+	}
+
+	/**
+	 * Moves the elevator
+	 * 
+	 * @param desfloor
+	 */
+	private void handleMove(int desFloor) {
+
+		if (desFloor > curFloor) {
+			
+			//if elevator is idle, tell view it is starting to move
+			if(this.motor == MotorState.IDLE)
+				updateViews("Moving up from " + curFloor + "\n");
+			
+			
+			this.motor = MotorState.UP;
+
+			try {
+				Thread.sleep(Timer.FLOOR_TIME);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			if (checkFloorError())
+				return;
+
+			curFloor++;
+
+			updateViews("Reached floor " + curFloor + "\n");
+
+		}
+		if (desFloor < curFloor) {
+			
+			//if elevator is idle, tell view it is starting to move
+			if(this.motor == MotorState.IDLE)
+				updateViews("Moving down from " + curFloor + "\n");
+			
+			this.motor = MotorState.DOWN;
+
+			try {
+				Thread.sleep(Timer.FLOOR_TIME);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			if (checkFloorError())
+				return;
+
+			curFloor--;
+
+			updateViews("Reached floor " + curFloor + "\n");
+
+		}
+		if (desFloor == curFloor) {
+			try {
+
+				// set current state to idle and remove destination floor from queue of floors
+				// to visit
+				if (handlingUp) {
+					upfloorQueue.remove(0);
+
+					this.motor = MotorState.IDLE;
+
+					if (upfloorQueue.size() == 0 && downfloorQueue.size() != 0) {
+						if (this.curFloor == downfloorQueue.get(0)) {
+							return;
+						}
+					}
+
+				} else if (handlingDown) {
+					downfloorQueue.remove(0);
+
+					this.motor = MotorState.IDLE;
+
+					if (downfloorQueue.size() == 0 && upfloorQueue.size() != 0) {
+						if (this.curFloor == upfloorQueue.get(0)) {
+							return;
+						}
+					}
+
+				}
+
+				updateViews("Reached its destination. Opening doors...\n");
+
+				// System.out.println(Timer.formatTime() + " [" +
+				// Thread.currentThread().getName()
+				// + "] Reached its destination. Opening doors...\n");
+
+				Thread.sleep(Timer.DOOR_TIME);
+				this.door = door.switchState();
+				updateViews("Doors are " + this.getDoor() + ". Loading/unloading passengers...\n");
+
+				// System.out.println(Timer.formatTime() + " [" +
+				// Thread.currentThread().getName() + "] Doors are "
+				// + this.getDoor().getState() + "\n");
+				// System.out.println(Timer.formatTime() + " [" +
+				// Thread.currentThread().getName()
+				// + "] Loading/unloading passengers...\n");
+
+				Thread.sleep(Timer.LOAD_TIME);
+
+				// System.out.println(
+				// Timer.formatTime() + " [" + Thread.currentThread().getName() + "] Done.
+				// Closing doors...\n");
+
+				updateViews("Done. Closing doors...\n");
+
+				Thread.sleep(Timer.DOOR_TIME);
+
+				// check here if there is a door fault, if so, wait 2 seconds then close doors
+				// again.
+				if (this.errorCode == Constants.DOOR_ERROR) {
+					// System.err.println(Timer.formatTime() + " [" +
+					// Thread.currentThread().getName()
+					// + "] Door closing failed. Retrying in 2 seconds...\n");
+					updateViews("Door closing failed. Retrying in 2 seconds...\n");
+					Thread.sleep(2000);
+
+					// System.out.println(
+					// Timer.formatTime() + " [" + Thread.currentThread().getName() + "] Closing
+					// doors...\n");
+
+					updateViews("Closing doors...\n");
+
+					Thread.sleep(Timer.DOOR_TIME);
+
+					this.errorCode = -1;
+				}
+
+				this.door = door.switchState();
+				updateViews("Doors are " + this.getDoor() + "\n");
+
+				// System.out.println(Timer.formatTime() + " [" +
+				// Thread.currentThread().getName() + "] Doors are "
+				// + this.getDoor().getState() + "\n");
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+	}
+
+	private boolean checkFloorError() {
+		// check here if there is a floor fault, if so, kill the elevator thread.
+		if (this.errorCode == Constants.FLOOR_ERROR) {
+			active = false;
+			this.motor = MotorState.IDLE;
+			this.handlingUp = false;
+			this.handlingDown = false;
+			return true;
+		}
+		return false;
+	}
+
+	public void addView(IView view) {
+		this.views.add(view);
+	}
+
+	public void updateViews(String message) {
+		views.forEach(e -> e.updateView(message));
+	}
+
+	public boolean getActive() {
+		return active;
 	}
 
 	public MotorState getMotor() {
@@ -47,111 +307,124 @@ public class Elevator implements Observer, Runnable {
 		return curFloor;
 	}
 
-	@Override
-	public void update(byte[] data) {
-		System.out.println("Elevator has received move information");
-		System.out.println("For elevator: " + data[1]);
-		System.out.println("Go to floor: " + data[2]);
-		System.out.println("Wants to go to floor: " + data[3]);
-		
-		//TODO make this do fancy algorithm stuff
-		floorQueue.add((int) data[2]);
-		floorQueue.add((int) data[3]);
+	public String getError() {
+
+		switch (errorCode) {
+		case Constants.FLOOR_ERROR:
+			return "FLOOR_ERROR";
+		case Constants.DOOR_ERROR:
+			return "DOOR_ERROR";
+		default:
+			return "NONE";
+		}
+
 	}
 	
-	@Override
-	public Elevator getElevator() {
-		return this;
+	public boolean isHandlingUp() {
+		return this.handlingUp;
 	}
-	@Override
-	public Floor getFloor() {
-		// TODO Auto-generated method stub
-		return null;
+	
+	public boolean isHandlingDown() {
+		return this.handlingDown;	
+	}
+	
+	public List<Byte> getUpfloorQueue() {
+		return upfloorQueue;
 	}
 
+	public List<Byte> getDownfloorQueue() {
+		return downfloorQueue;
+	}
+	
 	/**
-	 * Moves the elevator
+	 * Calculates and return the string representing this elevators lamp.
 	 * 
-	 * @param desfloor
+	 * @return String, the lamp information
 	 */
-	private void handleMove(int desFloor) {
-		
-		if(desFloor - curFloor != 0) {
-			if(desFloor > curFloor) {
-				this.motor = MotorState.setState(2);
-				try {
-					System.out.println(Thread.currentThread().getName() + " has started moving from " + curFloor + " towards " + desFloor);
-					move(Direction.UP, desFloor - curFloor);
-				} catch (InterruptedException e) {e.printStackTrace();}
+	public String getLamp() {
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(curFloor + " ");
+
+		if (handlingUp) {
+			if (upfloorQueue.size() == 0) {
+				sb.append("-- ");
+			} else if (upfloorQueue.get(0) < curFloor) {
+				sb.append((char)8595);
+			} else if (upfloorQueue.get(0) > curFloor) {
+				sb.append((char)8593);
 			} else {
-				this.motor = MotorState.setState(3);
-				try {
-					System.out.println(Thread.currentThread().getName() + " has started moving from " + curFloor + " towards " + desFloor);
-					move(Direction.DOWN, curFloor - desFloor);
-				} catch (InterruptedException e) {e.printStackTrace();}
+				sb.append((char)8593);
 			}
+
+		} else if (handlingDown) {
+			if (downfloorQueue.size() == 0) {
+				sb.append("-- ");
+			} else if (downfloorQueue.get(0) < curFloor) {
+				sb.append((char)8595);
+			} else if (downfloorQueue.get(0) > curFloor) {
+				sb.append((char)8593);
+			} else {
+				sb.append((char)8595);
+			}
+
+		} else {
+			sb.append("-- ");
 		}
-		
-		this.motor = MotorState.setState(1);
-		
+
+		return sb.toString();
 	}
 
-	private void move(Direction direction, int floorsToMove) throws InterruptedException {
-		for (int i = 0; i < floorsToMove; i++) {
-			Thread.sleep(6402);
+	@Override
+	public String toString() {
 
-			if (direction.equals(Direction.UP)) {
-				curFloor++;
-				System.out.println(Thread.currentThread().getName() + " has moved up to floor " + curFloor);
-			} else {
-				curFloor--;
-				System.out.println(Thread.currentThread().getName() + " has moved down to floor " + curFloor);
-			}
-
-		}
-		
-		
-		System.out.println(Thread.currentThread().getName() + " has reached its destination. Opening doors...");
-		Thread.sleep(1000);
-
-		this.getDoor().switchState();
-		System.out.println("Doors are " + this.getDoor().getState() + "\n");
-		
-		System.out.println("Loading/unloading passengers...\n");
-		Thread.sleep(7344);
-		System.out.println("Done. Closing doors...");
-		Thread.sleep(1000);
-		
-		this.getDoor().switchState();
-		System.out.println("Door are " + this.getDoor().getState()+ "\n");
-		
+		return "MotorState: " + this.motor + " DoorState: " + this.door + "\nCurrent floor: " + this.curFloor
+				+ " Status: " + (active ? "Active" : "Disabled") + "\nError code: "
+				+ (errorCode == -1 ? "none" : errorCode);
 	}
 
 	@Override
 	public void run() {
 
-		while (!exit) {
-			
-			if(floorQueue.size() != 0) {
-				System.out.print("Heading to floor: " + floorQueue.get(0));
-				
-				handleMove(floorQueue.remove(0));
+		while (active) {
+
+			if (upfloorQueue.size() != 0 && !handlingDown) {
+
+				handlingUp = true;
+
+				handleMove(upfloorQueue.get(0));
+
+				if (upfloorQueue.size() == 0)
+					handlingUp = false;
 
 			}
 
+			if (downfloorQueue.size() != 0 && !handlingUp) {
+
+				handlingDown = true;
+
+				handleMove(downfloorQueue.get(0));
+
+				if (downfloorQueue.size() == 0)
+					handlingDown = false;
+
+			}
+
+			// while loop doesn't work without a tiny sleep for some reason so here it is...
 			try {
-				Thread.sleep((long) (Math.random() * 5000));
+				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 
-	}
-	
-	public void exit() {
-		exit = true;
-	}
+		// System.err.println(
+		// "[" + Thread.currentThread().getName() + "] Shutting down with error code: "
+		// + this.errorCode + "\n");
 
+		updateViews("Shutting down with error code: " + this.errorCode + "\n");
+
+	}
 
 }
