@@ -25,54 +25,54 @@ import system.Scheduler;
  *
  */
 class ElevatorSystemTest {
-
-	@Test
-	void elevatorSystemTest() {
-		Thread t = new Thread();
-		ElevatorSystem es = new ElevatorSystem("THIS IS A TEST ELEVATOR SYSTEM");
-		HashMap<Integer, Observer> elevators = es.getElevators();
-		Elevator e1;
-		Elevator e2;
-		Elevator e3;
-		Elevator e4;
-		e1 = elevators.get(1).getElevator();
-		e2 = elevators.get(2).getElevator();
-		e3 = elevators.get(3).getElevator();
-		e4 = elevators.get(4).getElevator();
-		assertEquals(e1.getCurFloor(),1);
-		assertEquals(e2.getCurFloor(),1);
-		assertEquals(e3.getCurFloor(),1);
-		assertEquals(e4.getCurFloor(),1);
-		
-		assertEquals(e1.getMotor(),MotorState.IDLE);
-		assertEquals(e2.getMotor(),MotorState.IDLE);
-		assertEquals(e3.getMotor(),MotorState.IDLE);
-		assertEquals(e4.getMotor(),MotorState.IDLE);
-		
-		assertEquals(e1.getDoor(),DoorState.CLOSED);
-		assertEquals(e2.getDoor(),DoorState.CLOSED);
-		assertEquals(e3.getDoor(),DoorState.CLOSED);
-		assertEquals(e4.getDoor(),DoorState.CLOSED);
-		es.closeSocket();
-		
-	}
 	
 	@Test
 	void elevatorSystemSendTest() {
 		new Thread(new Runnable() {
 			public void run() {
-				Scheduler s = new Scheduler("Reply2Test");
+				Scheduler s = new Scheduler("ElevatorPartialReplyTest");
 				s.closeSockets();
 			}
 
 		}).start();
 
-		ElevatorSystem es = new ElevatorSystem("SendTest");
-		System.out.println(es.getReceivePacket().getData());	
+		ElevatorSystem es = new ElevatorSystem("ElevatorSystemSendTest");
 		assertEquals(es.getReceivePacket().getData()[0],97);
 		assertEquals(es.getReceivePacket().getData()[1],99);
 		assertEquals(es.getReceivePacket().getData()[2],107);
 		assertEquals(es.getReceivePacket().getData()[3],0);
+		es.closeSocket();
+	
+	}
+	
+	@Test
+	void elevatorSystemFullTest() {
+		new Thread(new Runnable() {
+			public void run() {
+				Scheduler s = new Scheduler("FullTest");
+				s.closeSockets();
+			}
+
+		}).start();
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				FloorSystem fs = new FloorSystem(1,22,"FloorSystemFullTest");
+			}
+		}).start();
+
+		ElevatorSystem es = new ElevatorSystem("ElevatorSystemFullTest");
+		
+		assertEquals(es.getReceivePacket().getData()[0],15);
+		assertEquals(es.getReceivePacket().getData()[1],1);
+		assertEquals(es.getReceivePacket().getData()[2],5);
+		assertEquals(es.getReceivePacket().getData()[3],1);
+		assertEquals(es.getReceivePacket().getData()[4],-1);
+
 		es.closeSocket();
 	
 	}

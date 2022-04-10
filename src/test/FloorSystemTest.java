@@ -17,6 +17,7 @@ import event.EventFile;
 import event.FloorEvent;
 import floor.Floor;
 import state.Direction;
+import system.ElevatorSystem;
 import system.FloorSystem;
 import system.Scheduler;
 
@@ -25,42 +26,74 @@ import system.Scheduler;
  *
  */
 class FloorSystemTest {
-
-	@Test
-	void floorSystemTest() {
-		FloorSystem fs = new FloorSystem(1, 22,"THIS IS A FLOORSYSTEM TEST");
-		Floor f1 = fs.getFloors().get(0).getFloor();
-		assertEquals(f1.getFloorNumber(),1);
-		Floor f2 = fs.getFloors().get(1).getFloor();
-		assertEquals(f2.getFloorNumber(),2);
-		Floor f3 = fs.getFloors().get(2).getFloor();
-		assertEquals(f3.getFloorNumber(),3);
-		Floor f4 = fs.getFloors().get(3).getFloor();
-		assertEquals(f4.getFloorNumber(),4);
-	}
 	
 	@Test
 	void floorSystemSendTest() {
 		new Thread(new Runnable() {
 			public void run() {
-				Scheduler s = new Scheduler("ReplyTest");
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemSendTest");
+				es.closeSocket();
+			}
+		}).start();
+		new Thread(new Runnable() {
+			public void run() {
+				Scheduler s = new Scheduler("PartialReplyTest");
 				s.closeSockets();
 			}
 
 		}).start();
 		FloorSystem fs = new FloorSystem(1, 22, "SendTest");
-		assertEquals(fs.getReceivePacket().getData()[0],1);
-		assertEquals(fs.getReceivePacket().getData()[1],1);
-		assertEquals(fs.getReceivePacket().getData()[2],1);
-		assertEquals(fs.getReceivePacket().getData()[3],1);
-		assertEquals(fs.getReceivePacket().getData()[4],0);
-		assertEquals(fs.getReceivePacket().getData()[5],2);
-		assertEquals(fs.getReceivePacket().getData()[6],1);
-		assertEquals(fs.getReceivePacket().getData()[7],1);
-		assertEquals(fs.getReceivePacket().getData()[8],0);
-		
-		
 
+		assertEquals(fs.getReceivePacket().getData()[0],97);
+		assertEquals(fs.getReceivePacket().getData()[1],99);
+		assertEquals(fs.getReceivePacket().getData()[2],107);
+		assertEquals(fs.getReceivePacket().getData()[3],0);
+		assertEquals(fs.getReceivePacket().getData()[4],0);
+
+	}
+	
+	@Test
+	void floorSystemFullTest() {
+		new Thread(new Runnable() {
+			public void run() {
+				Scheduler s = new Scheduler("FullTest");
+				s.closeSockets();
+			}
+
+		}).start();
+		new Thread(new Runnable() {
+			public void run() {
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemFullTest");
+				es.closeSocket();
+			}
+		}).start();
+		FloorSystem fs = new FloorSystem(1, 22, "FloorSystemFullTest");
+		for(byte b :fs.getReceivePacket().getData() ) {
+			System.out.print(b+ " ");
+		}
+		byte[] data = fs.getReceivePacket().getData();
+		assertEquals(data[0],2);
+		assertEquals(data[1],1);
+		assertEquals(data[2],1);
+		assertEquals(data[3],1);
+		assertEquals(data[4],-1);
+		assertEquals(data[5],0);
+		assertEquals(data[6],2);
+		assertEquals(data[7],1);
+		assertEquals(data[8],1);
+		assertEquals(data[9],-1);
+		assertEquals(data[10],0);
+		assertEquals(data[11],3);
+		assertEquals(data[12],1);
+		assertEquals(data[13],1);
+		assertEquals(data[14],-1);
+		assertEquals(data[15],0);
+		assertEquals(data[16],4);
+		assertEquals(data[17],1);
+		assertEquals(data[18],1);
+		assertEquals(data[19],-1);
+		assertEquals(data[20],0);
 	}
 
 }
+  

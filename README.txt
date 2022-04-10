@@ -34,7 +34,7 @@ in which direction he is going.
 This class represent the floor system and keeps tracks of where the elevator is when the floor 
 button is pressed.
 
-* An Event file containing both EnventFile and FloorEvent classes
+* An Event file containing both EventFile and FloorEvent classes
 - Class EventFile
 This class is used to write or read events from the files. 
 - Class FloorEvent
@@ -46,8 +46,5 @@ a file.
 This class is to check if scheduler has job for elevator.
 - Class FloorSystem
 This class is to monitors event file for new floor events.
-- Class Pipe
-This class has for role to queue the different events happenning in the right order for the scheduler to 
-implement them.
 - Class Scheduler
 This class schedule the event and notify the system via pipe if the evnt is ready or the scheduling done. 

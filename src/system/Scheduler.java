@@ -50,6 +50,88 @@ public class Scheduler implements Runnable {
 		this.state = SchedulerState.IDLE;
 
 	}
+	
+	public Scheduler(String test) {
+		
+		System.out.println(test);
+		floorEventQueue = new ArrayList<>();
+
+		try {
+			floorSocket = new DatagramSocket(FLOOR_PORT);
+			elevatorSocket = new DatagramSocket(ELEVATOR_PORT);
+		} catch (SocketException se) {
+			se.printStackTrace();
+			System.exit(1);
+		}
+		
+		this.state = SchedulerState.IDLE;
+		if(test.equals("FloorReplyTest")) {
+			floorReply();
+			floorReply();			
+
+		}else if(test.equals("ElevatorReplyTest")) {
+			elevatorReply();
+			elevatorReply();
+
+		}else if(test.equals("FullTest")) {
+			elevatorReply();
+			floorReply();
+			elevatorReply();
+			floorReply();
+		}
+		else if(test.equals("PickUpTest")) {
+			elevatorReply();
+			floorReply();
+			elevatorReply();
+			floorReply();
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			elevatorReply();
+			elevatorReply();
+
+		}
+		else if(test.equals("DropOffTest")) {
+			elevatorReply();
+			floorReply();
+			elevatorReply();
+			floorReply();
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			elevatorReply();
+			elevatorReply();
+
+		}
+		else if(test.equals("DropOffErrorTest")) {
+			elevatorReply();
+			floorReply();
+			elevatorReply();
+			floorReply();
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			elevatorReply();
+			elevatorReply();
+
+		}
+		else if(test.equals("ElevatorPartialReplyTest")) {
+			elevatorReply();
+		}else if (test.equals("PartialReplyTest")) {
+			elevatorReply();
+			floorReply();
+		}
+		
+	}
 
 	/**
 	 * Runs the basic loop for the scheduler. Monitors packet information from both
@@ -316,18 +398,24 @@ public class Scheduler implements Runnable {
 	public SchedulerState getState() {
 		return state;
 	}
-
+	
+	public byte[] getElevatorStates() {
+		return elevatorStates;
+	}
+	
+	public ArrayList<byte[]> getFloorEventQueue(){ return floorEventQueue;}
+	
+	
 	public void closeSockets() {
 		floorSocket.close();
 		elevatorSocket.close();
 	}
-
+	
 	public DatagramPacket getElevatorPacket() {
 		return elevatorPacket;
 	}
 
 	public DatagramPacket getFloorPacket() {
-
 		return floorPacket;
 	}
 

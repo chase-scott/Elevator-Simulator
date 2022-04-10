@@ -34,7 +34,7 @@ public class FloorSystem implements Runnable {
 		}
 
 		// read events from event file
-		events = EventFile.readTextFile();
+		events = EventFile.readTextFile(false);
 
 		// open socket for sending and receiving data
 		try {
@@ -46,6 +46,44 @@ public class FloorSystem implements Runnable {
 		// close socket
 		// sendReceiveSocket.close();
 
+	}
+	
+	public FloorSystem(int MIN_FLOOR, int MAX_FLOOR, String test) {
+		System.out.println(test);
+		//add floorObservers for each floor
+		floorObservers = new ArrayList<>();
+		for (int i = Constants.MIN_FLOOR; i <= Constants.MAX_FLOOR; i++) {
+			floorObservers.add(new Floor(i, i == Constants.MIN_FLOOR, i == Constants.MAX_FLOOR));
+		}
+		
+		//read events from event file
+		events = EventFile.readTextFile(true);
+		
+
+		// open socket for sending and receiving data
+		try {
+			sendReceiveSocket = new DatagramSocket();
+		} catch (SocketException se) {
+			se.printStackTrace();
+		}
+
+		if(test.equals("SendTest")) {
+			send(FloorEvent.marshal(events[0]));
+
+		}else if(test.equals("FloorErrorTest")) {
+			send(FloorEvent.marshal(events[3]));	
+		}else if(test.equals("FloorErrorFullTest")) {
+			send(FloorEvent.marshal(events[4]));
+			send(DATA_REQUEST);
+		}else if(test.equals("DoorErrorTest")) {
+			send(FloorEvent.marshal(events[4]));			
+		}else if(test.equals("DoorErrorFullTest")) {
+			send(FloorEvent.marshal(events[4]));
+			send(DATA_REQUEST);			
+		}else if(test.equals("FloorSystemFullTest")) {
+			send(FloorEvent.marshal(events[0]));
+			send(DATA_REQUEST);			
+		}
 	}
 	
 	/**
@@ -157,6 +195,10 @@ public class FloorSystem implements Runnable {
 
 	public ArrayList<Observer> getFloors() {
 		return floorObservers;
+	}
+	
+	public DatagramPacket getReceivePacket() {
+		return receivePacket;
 	}
 
 	public static void main(String[] args) {

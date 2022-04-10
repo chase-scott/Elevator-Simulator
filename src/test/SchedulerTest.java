@@ -32,93 +32,47 @@ class SchedulerTest {
 	void schedulerElevatorReplyTest() {
 		new Thread(new Runnable() {
 			public void run() {
-
-				HashMap<Integer, Observer> elevators = new HashMap<>();
-				for (int i = 1; i < 3; i++) {
-					Elevator e = new Elevator(1, 22);
-					elevators.put(i, e);
-					new Thread(e, "Elevator " + i).start();;
-				}
-				DatagramSocket sendReceiveSocket = null;
-				try {
-					sendReceiveSocket = new DatagramSocket();
-
-				} catch (SocketException se) {
-					se.printStackTrace();
-				}
-				
-				ArrayList<Byte> data = new ArrayList<>();
-				data.add((byte) 1); // denote it is a send state message
-
-				// packet info (elevatorID, curFloor, desFloor, 0 , elevatorID, curFloor,
-				// desFloor)
-
-				for (int i : elevators.keySet()) {
-
-					data.add((byte) i); // add elevatorID
-
-					data.add((byte) ((Elevator) elevators.get(i)).getCurFloor()); // add current floor
-
-					data.add((byte) ((Elevator) elevators.get(i)).getMotor().getState());
-
-					data.add((byte) 0);
-
-				}
-
-				byte[] req = new byte[data.size()];
-				
-				for (int i = 0; i < data.size(); i++) {
-					req[i] = data.get(i);
-				}
-				
-				DatagramPacket sendPacket = null;
-				try {
-					sendPacket = new DatagramPacket(req, req.length, InetAddress.getLocalHost(), 69);
-				} catch (UnknownHostException e) {
-					e.printStackTrace();
-				}
-
-				// MESSAGE INFORMATION		
-				System.out.println("["+DateTimeFormatter.ofPattern("HH:mm:ss:A").format(LocalDateTime.now())+"] "
-						+ "ElevatorSystem: Sending packet:");
-				System.out.println("To host: " + sendPacket.getAddress());
-				System.out.println("Destination host port: " + sendPacket.getPort());
-				int len = sendPacket.getLength();
-				System.out.println("Length: " + len);
-				System.out.println("Containing: " + new String(sendPacket.getData(), 0, len));
-				System.out.println("Containing Bytes: " + Arrays.toString(sendPacket.getData()));
-				// MESSAGE INFORMATION
-
-				// try to send message over the socket at port 69
-				try {
-					sendReceiveSocket.send(sendPacket);
-					sendReceiveSocket.close();
-
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemSendTest");
+				es.closeSocket();
 			}
 		}).start();
-		Scheduler s = new Scheduler("ElevatorReplyTest");
+		Scheduler s = new Scheduler("ElevatorPartialReplyTest");
 		assertEquals(SchedulerState.IDLE,s.getState());
 		byte[] data = s.getElevatorPacket().getData();
-		assertEquals(data[0],1);
+
+		assertEquals(data[0],2);
 		assertEquals(data[1],1);
 		assertEquals(data[2],1);
 		assertEquals(data[3],1);
-		assertEquals(data[4],0);
-		assertEquals(data[5],2);
-		assertEquals(data[6],1);
+		assertEquals(data[4],-1);
+		assertEquals(data[5],0);
+		assertEquals(data[6],2);
 		assertEquals(data[7],1);
-		assertEquals(data[8],0);
+		assertEquals(data[8],1);
+		assertEquals(data[9],-1);
+		assertEquals(data[10],0);
+		assertEquals(data[11],3);
+		assertEquals(data[12],1);
+		assertEquals(data[13],1);
+		assertEquals(data[14],-1);
+		assertEquals(data[15],0);
+		assertEquals(data[16],4);
+		assertEquals(data[17],1);
+		assertEquals(data[18],1);
+		assertEquals(data[19],-1);
+		assertEquals(data[20],0);
 		s.closeSockets();
 		
 	}
 	
 	@Test
 	void schedulerFloorReplyTest() {
-
+		new Thread(new Runnable() {
+			public void run() {
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemSendTest");
+				es.closeSocket();
+			}
+		}).start();
 		new Thread(new Runnable() {
 			public void run() {
 				try {
@@ -129,7 +83,7 @@ class SchedulerTest {
 				FloorSystem fs = new FloorSystem(1,22,"SendTest");
 			}
 		}).start();
-		Scheduler s = new Scheduler("FloorReplyTest");
+		Scheduler s = new Scheduler("PartialReplyTest");
 
 		assertEquals(SchedulerState.IDLE,s.getState());
 		assertEquals(s.getFloorPacket().getData()[0],-84);
@@ -151,6 +105,12 @@ class SchedulerTest {
 	void floorErrorTest() {
 		new Thread(new Runnable() {
 			public void run() {
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemSendTest");
+				es.closeSocket();
+			}
+		}).start();
+		new Thread(new Runnable() {
+			public void run() {
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -160,22 +120,30 @@ class SchedulerTest {
 			}
 		}).start();
 		
-		Scheduler s = new Scheduler("FloorReplyTest");
+		Scheduler s = new Scheduler("PartialReplyTest");
 		ArrayList<byte[]> queue = s.getFloorEventQueue();
 		byte[] event = queue.get(0);
 		for (byte b : event) {
 			System.out.println(b + " ");
 		}
 		assertEquals(SchedulerState.IDLE,s.getState());
-		assertEquals(event[0],16); //Error data constant
-		assertEquals(event[1],3); //Elevator ID
-		assertEquals(event[2],-69); //Error type
-
+		assertEquals(event[0],15);
+		assertEquals(event[1],1);
+		assertEquals(event[2],17);
+		assertEquals(event[3],3);
+		assertEquals(event[4],-1);
+		s.closeSockets();
 
 	}
 	
 	@Test
 	void doorErrorTest() {
+		new Thread(new Runnable() {
+			public void run() {
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemSendTest");
+				es.closeSocket();
+			}
+		}).start();
 		new Thread(new Runnable() {
 			public void run() {
 				try {
@@ -187,16 +155,236 @@ class SchedulerTest {
 			}
 		}).start();
 		
-		Scheduler s = new Scheduler("FloorReplyTest");
+		Scheduler s = new Scheduler("PartialReplyTest");
 		ArrayList<byte[]> queue = s.getFloorEventQueue();
 		byte[] event = queue.get(0);
 		for (byte b : event) {
 			System.out.println(b + " ");
 		}
 		assertEquals(SchedulerState.IDLE,s.getState());
-		assertEquals(event[0],16); //Error data constant
-		assertEquals(event[1],1); //Elevator ID
-		assertEquals(event[2],-23); //Error type
+		assertEquals(event[0],15);
+		assertEquals(event[1],1); 
+		assertEquals(event[2],2);
+		assertEquals(event[3],5);
+		assertEquals(event[4],-69);
+		byte[] states = s.getElevatorStates();
+
+		s.closeSockets();
 	}
+	
+	@Test
+	void schedulerPickupTestTest() {
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				FloorSystem fs = new FloorSystem(1,22,"FloorSystemFullTest");
+			}
+		}).start();
+		new Thread(new Runnable() {
+			public void run() {
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemPickupTest");
+				es.closeSocket();
+			}
+		}).start();
+		
+		Scheduler s = new Scheduler("PickUpTest");
+		DatagramPacket fp = s.getFloorPacket();
+		DatagramPacket ep = s.getElevatorPacket();
+		for(byte b:fp.getData()) {
+			System.out.print(b + " ");
+		}
+		System.out.println();
+		for(byte b:ep.getData()) {
+			System.out.print(b + " ");
+		}
+		System.out.println();
+
+		ArrayList<byte[]> queue = s.getFloorEventQueue();		
+		assertEquals(SchedulerState.IDLE,s.getState());
+		assertEquals(fp.getData()[0],1);
+		assertEquals(fp.getData()[1],0);
+		
+		assertEquals(ep.getData()[0],1);
+		assertEquals(ep.getData()[1],0);
+		assertEquals(queue.isEmpty(),true);
+		byte[] states = s.getElevatorStates();
+		//Elevator States
+		assertEquals(states[0],2);
+		assertEquals(states[1],1);
+		assertEquals(states[2],5);
+		assertEquals(states[3],1);
+		assertEquals(states[4],3);
+		assertEquals(states[5],0);
+		assertEquals(states[6],2);
+		assertEquals(states[7],1);
+		assertEquals(states[8],1);
+		assertEquals(states[9],-1);
+		assertEquals(states[10],0);
+		assertEquals(states[11],3);
+		assertEquals(states[12],1);
+		assertEquals(states[13],1);
+		assertEquals(states[14],-1);
+		assertEquals(states[15],0);		
+		assertEquals(states[16],4);
+		assertEquals(states[17],1);
+		assertEquals(states[18],1);
+		assertEquals(states[19],-1);
+		assertEquals(states[20],0);
+		s.closeSockets();
+			
+	}
+	
+	@Test
+	void schedulerDropoffTest() {
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				FloorSystem fs = new FloorSystem(1,22,"FloorSystemFullTest");
+			}
+		}).start();
+		new Thread(new Runnable() {
+			public void run() {
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemDropOffTest");
+				es.closeSocket();
+			}
+		}).start();
+		
+		Scheduler s = new Scheduler("DropOffTest");
+		DatagramPacket fp = s.getFloorPacket();
+		DatagramPacket ep = s.getElevatorPacket();
+		for(byte b:fp.getData()) {
+			System.out.print(b + " ");
+		}
+		System.out.println();
+		for(byte b:ep.getData()) {
+			System.out.print(b + " ");
+		}
+		System.out.println();
+
+		ArrayList<byte[]> queue = s.getFloorEventQueue();
+
+//		for (byte b : event) {
+//			System.out.println(b + " ");
+//		}
+		
+		assertEquals(SchedulerState.IDLE,s.getState());
+		assertEquals(fp.getData()[0],1);
+		assertEquals(fp.getData()[1],0);
+		
+		assertEquals(ep.getData()[0],1);
+		assertEquals(ep.getData()[1],0);
+		assertEquals(queue.isEmpty(),true);
+		byte[] states = s.getElevatorStates();
+		System.out.println("Elevator states");
+		for (byte b : states) {
+			System.out.print(b + " ");
+		}
+		//Elevator States
+		assertEquals(states[0],2);
+		assertEquals(states[1],1);
+		assertEquals(states[2],1);
+		assertEquals(states[3],1);
+		assertEquals(states[4],3);
+		assertEquals(states[5],0);
+		assertEquals(states[6],2);
+		assertEquals(states[7],1);
+		assertEquals(states[8],1);
+		assertEquals(states[9],-1);
+		assertEquals(states[10],0);
+		assertEquals(states[11],3);
+		assertEquals(states[12],1);
+		assertEquals(states[13],1);
+		assertEquals(states[14],-1);
+		assertEquals(states[15],0);		
+		assertEquals(states[16],4);
+		assertEquals(states[17],1);
+		assertEquals(states[18],1);
+		assertEquals(states[19],-1);
+		assertEquals(states[20],0);
+		s.closeSockets();
+			
+	}
+	
+	@Test
+	void schedulerCheckElevatorActiveTest() {
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				FloorSystem fs = new FloorSystem(1,22,"FloorErrorFullTest");
+			}
+		}).start();
+		new Thread(new Runnable() {
+			public void run() {
+				ElevatorSystem es = new ElevatorSystem("ElevatorSystemDropOffTest");
+				es.closeSocket();
+			}
+		}).start();
+		
+		Scheduler s = new Scheduler("DropOffErrorTest");
+		DatagramPacket fp = s.getFloorPacket();
+		DatagramPacket ep = s.getElevatorPacket();
+		for(byte b:fp.getData()) {
+			System.out.print(b + " ");
+		}
+		System.out.println();
+		for(byte b:ep.getData()) {
+			System.out.print(b + " ");
+		}
+		System.out.println();
+
+		ArrayList<byte[]> queue = s.getFloorEventQueue();
+
+//		for (byte b : event) {
+//			System.out.println(b + " ");
+//		}
+		
+		assertEquals(SchedulerState.IDLE,s.getState());
+		assertEquals(fp.getData()[0],1);
+		assertEquals(fp.getData()[1],0);
+		
+		assertEquals(ep.getData()[0],1);
+		assertEquals(ep.getData()[1],0);
+		assertEquals(queue.isEmpty(),true);
+		byte[] states = s.getElevatorStates();
+
+		//Elevator States
+		assertEquals(states[0],2);
+		assertEquals(states[1],-1);
+		assertEquals(states[2],1);
+		assertEquals(states[3],1);
+		assertEquals(states[4],-1);
+		assertEquals(states[5],0);
+		assertEquals(states[6],2);
+		assertEquals(states[7],1);
+		assertEquals(states[8],1);
+		assertEquals(states[9],-1);
+		assertEquals(states[10],0);
+		assertEquals(states[11],3);
+		assertEquals(states[12],1);
+		assertEquals(states[13],1);
+		assertEquals(states[14],-1);
+		assertEquals(states[15],0);		
+		assertEquals(states[16],4);
+		assertEquals(states[17],1);
+		assertEquals(states[18],1);
+		assertEquals(states[19],-1);
+		assertEquals(states[20],0);	
+		s.closeSockets();
+			
+	}
+	
+	
 	
 }

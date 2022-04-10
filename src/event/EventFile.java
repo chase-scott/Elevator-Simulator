@@ -16,6 +16,7 @@ public class EventFile {
 
 	// file path for event file
 	public static String EVENT_FILEPATH = "eventfolder/eventFile.txt";
+	public static String EVENT_TEST_FILEPATH = "eventfolder/testEventFile.txt";
 
 	private long timeStamp;
 	private File file;
@@ -26,6 +27,11 @@ public class EventFile {
 	public EventFile() {
 
 		this.file = new File(EVENT_FILEPATH);
+		this.timeStamp = file.lastModified();
+	}
+	public EventFile(String test) {
+
+		this.file = new File(EVENT_TEST_FILEPATH);
 		this.timeStamp = file.lastModified();
 	}
 
@@ -66,17 +72,30 @@ public class EventFile {
 	 * @param file File, the file to parse
 	 * @return FloorEvent[], the parsed events
 	 */
-	public static FloorEvent[] readTextFile() {
+	public static FloorEvent[] readTextFile(boolean isTest) {
 		StringBuilder contentBuilder = new StringBuilder();
-		try (BufferedReader br = new BufferedReader(new FileReader(EVENT_FILEPATH))) {
+		if(isTest) {
+			try (BufferedReader br = new BufferedReader(new FileReader(EVENT_TEST_FILEPATH))) {
 
-			String sCurrentLine;
-			while ((sCurrentLine = br.readLine()) != null) {
-				contentBuilder.append(sCurrentLine + "\n");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+				String sCurrentLine;
+				while ((sCurrentLine = br.readLine()) != null) {
+					contentBuilder.append(sCurrentLine + "\n");
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}				
+		}else {
+			try (BufferedReader br = new BufferedReader(new FileReader(EVENT_FILEPATH))) {
+
+				String sCurrentLine;
+				while ((sCurrentLine = br.readLine()) != null) {
+					contentBuilder.append(sCurrentLine + "\n");
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}			
 		}
+
 
 		String[] eventStrings = contentBuilder.toString().split("\n");
 		FloorEvent[] events = new FloorEvent[eventStrings.length];

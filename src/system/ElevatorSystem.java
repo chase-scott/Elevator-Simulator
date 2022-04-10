@@ -44,6 +44,69 @@ public class ElevatorSystem implements Runnable {
 		}
 
 	}
+	
+	
+	public ElevatorSystem(String test) {
+		System.out.println(test);
+		// create 4 elevators and add them to the system
+		this.elevators = new HashMap<>();
+		for (int i = 1; i < 5; i++) {
+			Elevator e = new Elevator(1, 22);
+			elevators.put(i, e);
+			new Thread(e, "Elevator " + i).start();
+		}
+
+		try {
+			sendReceiveSocket = new DatagramSocket();
+
+		} catch (SocketException se) {
+			se.printStackTrace();
+		}
+		
+		if(test.equals("ElevatorSystemSendTest")) {
+			send(this.buildStateData());	
+		}else if(test.equals("ElevatorSystemFullTest")) {
+			send(this.buildStateData());	
+			send(DATA_REQUEST);
+
+		}
+		else if(test.equals("ElevatorSystemPickupTest")) {
+			send(this.buildStateData());	
+			send(DATA_REQUEST);
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			send(this.buildStateData());	
+			send(DATA_REQUEST);
+		}else if(test.equals("ElevatorSystemDropOffTest")) {
+			send(this.buildStateData());	
+			send(DATA_REQUEST);
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			send(this.buildStateData());	
+			send(DATA_REQUEST);
+		}else if(test.equals("ElevatorSystemDropOffErrorTest")) {
+			send(this.buildStateData());	
+			send(DATA_REQUEST);
+			try {
+				Thread.sleep(20000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			send(this.buildStateData());	
+			send(DATA_REQUEST);
+		}
+		
+
+	}
 
 	/**
 	 * Runs the communication loop for the elevator subsystem.
@@ -234,7 +297,15 @@ public class ElevatorSystem implements Runnable {
 		}
 	}
 	
-	public HashMap<Integer, Observer> getElevators() {
+	public DatagramPacket getReceivePacket() {
+		return receivePacket;
+	}
+	
+	public void closeSocket() {
+		sendReceiveSocket.close();
+	}
+
+	public HashMap<Integer, Observer> getElevators(){
 		return elevators;
 	}
 
